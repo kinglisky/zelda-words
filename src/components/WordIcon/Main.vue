@@ -1,11 +1,22 @@
 <template>
-    <svg :style="iconStyle" class="word-icon" aria-hidden="true">
-        <use :xlink:href="fullName" />
+    <svg
+        class="word-icon"
+        aria-hidden="true"
+        :style="iconStyle"
+    >
+        <use v-if="name" :xlink:href="fullName" />
     </svg>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
+
+type IconStyle = {
+    color?: string;
+    width?: string;
+    height?: string;
+    opacity?: string;
+};
 
 export default defineComponent({
     name: 'WordIcon',
@@ -33,33 +44,39 @@ export default defineComponent({
         },
 
         opacity: {
-            type: [Number, String],
+            type: String,
             default: '',
         },
     },
 
-    computed: {
-        fullName(): string {
-            return `#icon-${this.name}`;
-        },
-
-        iconStyle() {
-            const { color, opacity, width: w, height: h } = this;
-            const style = {};
-            if (color) {
-                style.color = color;
+    setup: (props) => {
+        const fullName = computed(() => `#icon-${props.name}`);
+        const iconStyle = computed(() => {
+            const style: IconStyle = {};
+            if (props.color) {
+                style.color = props.color;
             }
-            if (w != null) {
-                style.width = typeof w === 'number' ? `${w}px` : w;
+            if (props.width != null) {
+                style.width =
+                    typeof props.width === 'number'
+                        ? `${props.width}px`
+                        : props.width;
             }
-            if (h != null) {
-                style.height = typeof h === 'number' ? `${h}px` : h;
+            if (props.height != null) {
+                style.height =
+                    typeof props.height === 'number'
+                        ? `${props.height}px`
+                        : props.height;
             }
-            if (opacity != null) {
-                style.opacity = opacity;
+            if (props.opacity != null) {
+                style.opacity = props.opacity;
             }
             return style;
-        },
+        });
+        return {
+            fullName,
+            iconStyle,
+        };
     },
 });
 </script>

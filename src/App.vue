@@ -26,36 +26,41 @@
             <label class="color-input" for="font-size-input">
                 <span>font size：</span>
                 <input
-                    type="range"
+                    type="number"
                     id="font-size-input"
-                    min="30"
-                    max="200"
+                    min="20"
+                    max="300"
                     step="2"
                     v-model="size"
                 />
-                <span>{{ size }}px</span>
             </label>
 
             <label class="button-input" for="image-upload">
                 <span>parse image</span>
                 <input type="file" id="image-upload" />
             </label>
-            <span class="button-input">download image</span>
+            <span
+                class="button-input"
+                @click="downloadImage"
+            >
+                {{ loading ? 'download...' : 'download image' }}
+            </span>
         </section>
 
         <section class="content">
             <textarea
                 class="words"
                 placeholder="input..."
-                v-model.trim="words"
+                v-model="words"
             />
             <div class="results">
                 <WordsPanel
-                  :words="words"
-                  :size="size"
-                  :vertical="vertical"
-                  :fontColor="fontColor"
-                  :backgroundColor="backgroundColor"
+                    ref="wordsPanel"
+                    :words="words"
+                    :size="size"
+                    :vertical="vertical"
+                    :fontColor="fontColor"
+                    :backgroundColor="backgroundColor"
                 />
             </div>
         </section>
@@ -66,26 +71,6 @@
 import { defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 
-const useConfig = () => {
-    const size = ref(60);
-    const backgroundColor = ref('#000000');
-    const fontColor = ref('#97f7ff');
-    const vertical = ref(false);
-    return {
-        size,
-        backgroundColor,
-        fontColor,
-        vertical,
-    };
-};
-
-const useWords = () => {
-    const words = ref('hello world');
-    return {
-        words,
-    };
-};
-
 export default defineComponent({
     name: 'App',
 
@@ -94,9 +79,29 @@ export default defineComponent({
     },
 
     setup: () => {
+        const size = ref('60');
+        const fontColor = ref('#ffffff');
+        const backgroundColor = ref('#000000');
+        const vertical = ref(false);
+        const words = ref('hello world');
+        const wordsPanel = ref(null);
+        const loading = ref(false);
+        const downloadImage = async () => {
+            const panel = wordsPanel.value || { download: () => {} };
+            loading.value = true;
+            await panel.download();
+            loading.value = false;
+        };
+    
         return {
-            ...useConfig(),
-            ...useWords(),
+            size,
+            fontColor,
+            backgroundColor,
+            vertical,
+            words,
+            loading,
+            wordsPanel,
+            downloadImage,
         };
     },
 });
@@ -188,6 +193,7 @@ body {
     align-items: center;
     flex: 1;
     width: 100%;
+    overflow: hidden;
 }
 
 .words {
@@ -210,6 +216,5 @@ body {
     height: 100%;
     overflow-x: auto;
     overflow-y: auto;
-    padding: 32px;
 }
 </style>

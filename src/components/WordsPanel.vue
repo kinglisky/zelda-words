@@ -3,17 +3,16 @@
         class="words-panel"
         ref="container"
         :class="{ 'words-panel--vertical': vertical }"
-        :style="style"
-        @click="download"
+        :style="groups.style"
     >
         <div
             class="words-panel__groups"
-            v-for="(group, index) in groups"
+            v-for="(group, index) in groups.items"
             :key="index"
             :style="group.style"
         >
             <WordIcon
-                v-for="(word, idx) in group.value"
+                v-for="(word, idx) in group.items"
                 :key="idx"
                 :name="word"
                 :width="size"
@@ -24,7 +23,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from 'vue';
+import { defineComponent, computed, ref } from 'vue';
 import exportImage from './export-image';
 import WordIcon from './WordIcon/Main.vue';
 import ICON_MAP from './WordIcon/icon-map';
@@ -43,8 +42,8 @@ export default defineComponent({
         },
 
         size: {
-            type: Number,
-            default: 750,
+            type: String,
+            default: '60',
         },
 
         fontColor: {
@@ -65,7 +64,7 @@ export default defineComponent({
 
     setup: (props) => {
         const container = ref(null);
-        const style = computed(() => {
+        const containerStyle = computed(() => {
             return {
                 padding: `${props.size}px`,
                 color: props.fontColor,
@@ -74,29 +73,42 @@ export default defineComponent({
         });
 
         const groups = computed(() => {
-            return props.words.toLowerCase()
+            let width = 0;
+            let height = 0;
+            const size = Number(props.size);
+            const items = props.words.toLowerCase()
                 .split('\n')
                 .map(word => {
-                    const containerSize = word.length * props.size;
+                    const containerSize = word.length * size;
+                    width = Math.max(containerSize, width);
+                    height += Number(size);
                     const style = props.vertical
-                        ? { width: `${props.size}px`, height: `${containerSize}px`}
-                        : { width: `${containerSize}px`, height: `${props.size}px` };
+                        ? { width: `${size}px`, height: `${containerSize}px`}
+                        : { width: `${containerSize}px`, height: `${size}px` };
                     return {
                         style,
-                        value: word.split('').map(v => (ICON_MAP[v] || '')),
+                        items: word.split('').map(v => ICON_MAP[v] || ''),
                     };
                 });
+            width += size * 2;
+            height += size * 2;
+            return {
+                items,
+                style: {
+                    width: props.vertical ? `${height}px` : `${width}px`,
+                    height: props.vertical ? `${width}px` : `${height}px`,
+                    padding: `${size}px`,
+                    color: props.fontColor,
+                    backgroundColor: props.backgroundColor,
+                },
+            };
         });
 
         const download = () => exportImage(container.value);
 
-        onMounted(() => {
-            console.log(container);
-        });
-
         return {
             container,
-            style,
+            containerStyle,
             groups,
             download,
         };
@@ -106,7 +118,6 @@ export default defineComponent({
 
 <style lang="scss">
 .words-panel {
-    width: 100%;
 
     &__groups {
         display: flex;
