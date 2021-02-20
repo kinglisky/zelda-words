@@ -92,11 +92,15 @@ export default defineComponent({
                 });
             width += size * 2;
             height += size * 2;
+            const containerWidth = props.vertical ? height : width;
+            const containerHeight = props.vertical ? width : height;
             return {
                 items,
+                containerWidth,
+                containerHeight,
                 style: {
-                    width: props.vertical ? `${height}px` : `${width}px`,
-                    height: props.vertical ? `${width}px` : `${height}px`,
+                    width: `${containerWidth}px`,
+                    height: `${containerHeight}px`,
                     padding: `${size}px`,
                     color: props.fontColor,
                     backgroundColor: props.backgroundColor,
@@ -104,7 +108,12 @@ export default defineComponent({
             };
         });
 
-        const download = () => exportImage(container.value);
+        const download = () => exportImage(container.value, {
+            size: props.size,
+            vertical: props.vertical,
+            width: groups.value.containerWidth,
+            height: groups.value.containerHeight,
+        });
 
         return {
             container,
