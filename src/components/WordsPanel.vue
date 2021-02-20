@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref } from 'vue';
-import exportImage from './export-image';
+import exportImage from '../utils/export-image';
 import WordIcon from './WordIcon/Main.vue';
 import ICON_MAP from './WordIcon/icon-map';
 
@@ -64,13 +64,6 @@ export default defineComponent({
 
     setup: (props) => {
         const container = ref(null);
-        const containerStyle = computed(() => {
-            return {
-                padding: `${props.size}px`,
-                color: props.fontColor,
-                backgroundColor: props.backgroundColor,
-            };
-        });
 
         const groups = computed(() => {
             let width = 0;
@@ -117,7 +110,6 @@ export default defineComponent({
 
         return {
             container,
-            containerStyle,
             groups,
             download,
         };

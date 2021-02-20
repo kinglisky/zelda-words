@@ -14,7 +14,6 @@ export function writeMeta(options: WriteOptions): Uint8ClampedArray {
         height,
         data
     } = options;
-    debugger;
     const info = `${vertical ? 1 : 0}${size}<#>`;
     const meta = info.split('').reduce((b, w) => {
         return b + w.charCodeAt(0).toString(2);
@@ -31,12 +30,6 @@ export function writeMeta(options: WriteOptions): Uint8ClampedArray {
         }
     }
     return data;
-}
-
-interface LikeImageData {
-    width: number;
-    height: number;
-    data: Uint8ClampedArray;
 }
 
 export function readMeta(imageData: ImageData) {

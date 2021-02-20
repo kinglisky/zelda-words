@@ -37,7 +37,12 @@
 
             <label class="button-input" for="image-upload">
                 <span>parse image</span>
-                <input type="file" id="image-upload" />
+                <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/*"
+                    @change="uploadImage"
+                />
             </label>
             <span
                 class="button-input"
@@ -64,18 +69,26 @@
                 />
             </div>
         </section>
+
+        <ParsePanel
+            v-if="showParsePanel"
+            :url="parseImageUrl"
+            @close="showParsePanel = false"
+        />
     </main>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
+import ParsePanel from './components/ParsePanel.vue';
 
 export default defineComponent({
     name: 'App',
 
     components: {
         WordsPanel,
+        ParsePanel,
     },
 
     setup: () => {
@@ -92,6 +105,14 @@ export default defineComponent({
             await panel.download();
             loading.value = false;
         };
+
+        const showParsePanel = ref(false);
+        const parseImageUrl = ref('');
+        const uploadImage = ({ target }: any) => {
+            const [file] = target.files;
+            parseImageUrl.value = URL.createObjectURL(file);
+            showParsePanel.value = true;
+        };
     
         return {
             size,
@@ -102,6 +123,9 @@ export default defineComponent({
             loading,
             wordsPanel,
             downloadImage,
+            uploadImage,
+            parseImageUrl,
+            showParsePanel,
         };
     },
 });
