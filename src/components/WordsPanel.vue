@@ -102,10 +102,13 @@ export default defineComponent({
         });
 
         const download = () => exportImage(container.value, {
-            size: props.size,
-            vertical: props.vertical,
+            size: Number(props.size),
+            message: props.words,
             width: groups.value.containerWidth,
             height: groups.value.containerHeight,
+        }).catch(error => {
+            window.alert(error.message || '图片导出出错！');
+            console.log(error);
         });
 
         return {

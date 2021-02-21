@@ -2,12 +2,12 @@
     <main class="container">
         <section class="header">
             <label class="color-input" for="font-color-input">
-                <span>font color：</span>
+                <span>Font Color：</span>
                 <input type="color" id="font-color-input" v-model="fontColor" />
             </label>
 
             <label class="color-input" for="background-color-input">
-                <span>background color：</span>
+                <span>Background Color：</span>
                 <input
                     type="color"
                     id="background-color-input"
@@ -16,7 +16,7 @@
             </label>
 
             <label class="color-input" for="vertical-radio">
-                <span>vertical：</span>
+                <span>Vertical：</span>
                 <input
                     type="checkbox"
                     v-model="vertical"
@@ -24,7 +24,7 @@
             </label>
 
             <label class="color-input" for="font-size-input">
-                <span>font size：</span>
+                <span>Font Size：</span>
                 <input
                     type="number"
                     id="font-size-input"
@@ -36,7 +36,7 @@
             </label>
 
             <label class="button-input" for="image-upload">
-                <span>parse image</span>
+                <span>Parse Image</span>
                 <input
                     type="file"
                     id="image-upload"
@@ -48,7 +48,7 @@
                 class="button-input"
                 @click="downloadImage"
             >
-                {{ loading ? 'download...' : 'download image' }}
+                {{ loading ? 'Download...' : 'Download Image' }}
             </span>
         </section>
 
@@ -62,7 +62,7 @@
                 <WordsPanel
                     ref="wordsPanel"
                     :words="words"
-                    :size="size"
+                    :size="limitSize"
                     :vertical="vertical"
                     :fontColor="fontColor"
                     :backgroundColor="backgroundColor"
@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
 
@@ -99,6 +99,8 @@ export default defineComponent({
         const words = ref('hello world');
         const wordsPanel = ref(null);
         const loading = ref(false);
+        const limitSize = computed(() => Number(size.value) < 20 ? '20' : size.value);
+
         const downloadImage = async () => {
             const panel = wordsPanel.value || { download: () => {} };
             loading.value = true;
@@ -112,10 +114,12 @@ export default defineComponent({
             const [file] = target.files;
             parseImageUrl.value = URL.createObjectURL(file);
             showParsePanel.value = true;
+            target.value = '';
         };
     
         return {
             size,
+            limitSize,
             fontColor,
             backgroundColor,
             vertical,

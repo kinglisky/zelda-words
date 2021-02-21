@@ -1,49 +1,16 @@
 <template>
-    <section class="parse-panel">
-        <span class="parse-panel__close" @click="close"> X </span>
+    <section
+        ref="container"
+        class="parse-panel"
+    >
+        <span class="parse-panel__close" @click="close">×</span>
+        <textarea class="parse-panel__message" v-model="message"></textarea>
     </section>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from 'vue';
-import { readMeta } from '../utils/meta-info';
-import { createImageGridsData } from '../utils/image-parser';
-import allWordsImage from '../assets/all-words.png';
-
-
-const loadImage = (url: string) => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = (e) => reject(e);
-        img.src = url;
-    });
-};
-
-const getImageData = (image: HTMLImageElement) => {
-    const { naturalWidth: width, naturalHeight: height } = image;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = <CanvasRenderingContext2D> canvas.getContext('2d');
-    ctx.drawImage(image, 0, 0);
-    return ctx.getImageData(0, 0, width, height);
-};
-
-// 获取图片中文字排列与文字块大小
-const getImageMetaInfo = async (url: string) => {
-    const image = await loadImage(url);
-    const imageData = getImageData(image as HTMLImageElement);
-    return readMeta(imageData);
-}
-
-const initFontsFingerprint = async () => {
-    const data = await createImageGridsData(allWordsImage, {
-        size: 100,
-        fingerprintSize: 8,
-    });
-    console.log(data);
-}
+import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import { readMetaInfo } from '../utils/image-meta';
 
 export default defineComponent({
     name: 'ParsePanel',
@@ -56,12 +23,44 @@ export default defineComponent({
     },
 
     setup: (props, context) => {
+        const container = ref(null);
+        const loading = ref(false);
+        const metaInfo = ref('');
+        const message = computed(() => {
+            return loading.value ? '图片解析中......' : metaInfo.value;
+        });
+
         const close = () => context.emit('close');
 
+        const parseImage = async () => {
+            loading.value = true;
+            try {
+                metaInfo.value = await readMetaInfo(props.url);
+            } catch (error) {
+                console.log(error);
+                metaInfo.value = error.message || '图片信息解析出错！';
+            }
+            loading.value = false;
+        }
+
+        const closePanel = (event: Event) => {
+            if (!container.value.contains(event.target)) {
+                close();
+            }
+        };
+
         onMounted(() => {
-            initFontsFingerprint(allWordsImage);
+            document.body.addEventListener('click', closePanel, false);
+            parseImage();
         });
+
+        onBeforeUnmount(() => {
+            document.body.removeEventListener('click', closePanel, false);
+        });
+
         return {
+            container,
+            message,
             close,
         };
     },
@@ -71,26 +70,41 @@ export default defineComponent({
 <style lang="scss">
 .parse-panel {
     position: fixed;
-    width: 600px;
-    height: 400px;
-    background: #fff;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 50%;
+    background: #fff;
     border-radius: 4px;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
 
     &__close {
         position: absolute;
-        display: block;
-        right: 0;
         top: 0;
-        width: 32px;
-        height: 32px;
+        right: 0;
+        display: block;
+        width: 36px;
+        height: 36px;
         color: #000;
-        line-height: 32px;
+        font-size: 36px;
+        line-height: 36px;
         text-align: center;
         cursor: pointer;
+    }
+
+    &__message {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 32px;
+        color: #000;
         font-size: 18px;
+        font-weight: bold;
+        line-height: 2;
+        border: none;
+        outline: none;
+        resize: none;
     }
 }
 </style>
