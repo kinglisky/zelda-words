@@ -93,8 +93,8 @@ export default defineComponent({
 
     setup: () => {
         const size = ref('60');
-        const fontColor = ref('#ffffff');
-        const backgroundColor = ref('#000000');
+        const fontColor = ref('#13c2fe');
+        const backgroundColor = ref('#12181a');
         const vertical = ref(false);
         const words = ref('hello world');
         const wordsPanel = ref(null);
