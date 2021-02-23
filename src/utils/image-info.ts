@@ -318,7 +318,8 @@ function mapToSymbol(hashList: Array<any>, symbols: Array<any>) {
         let target = ' ';
         symbols.forEach(symbol => {
             const distance = hammingDistance(hash, symbol.value);
-            if (distance < diff) {
+            // 汉明距离大于标识相似度偏差较大排除
+            if (distance < diff && distance < 5) {
                 diff = distance;
                 target = symbol.name;
             }
