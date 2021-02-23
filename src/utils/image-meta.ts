@@ -125,5 +125,6 @@ export async function readMetaInfo(url: string) {
     }
     ctx.clearRect(0, 0, width, height);
     ctx.putImageData(imageData, 0, 0);
+    console.log(canvas.toDataURL());
     return decode(canvas.toDataURL());
 }

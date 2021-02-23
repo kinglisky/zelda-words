@@ -48,14 +48,9 @@ export default async function exportImage(node: HTMLBaseElement | null, options:
 
     const mergePixels = await writeMetaInfo(pixels, options);
     const canvas = putToCanvas(new ImageData(mergePixels, options.width, options.height));
-    return new Promise(resolve => {
-        canvas.toBlob((blob) => {
-            const objectURL = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.download = `zelda-words-${Date.now()}.png`;
-            link.href = objectURL;
-            link.click();
-            resolve(objectURL);
-        });
-    });
+    const dataUrl = canvas.toDataURL('image/jpeg', 1);
+    const link = document.createElement('a');
+    link.download = `zelda-words-${Date.now()}.jpeg`;
+    link.href = dataUrl;
+    link.click();
 }

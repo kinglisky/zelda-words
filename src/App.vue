@@ -82,6 +82,7 @@
 import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
+import './utils/image-info';
 
 export default defineComponent({
     name: 'App',
@@ -99,7 +100,12 @@ export default defineComponent({
         const words = ref('hello world');
         const wordsPanel = ref(null);
         const loading = ref(false);
-        const limitSize = computed(() => Number(size.value) < 20 ? '20' : size.value);
+        const limitSize = computed(() => {
+            let value = Number(size.value);
+            value = Math.max(20, value);
+            value = Math.min(200, value);
+            return String(value);
+        });
 
         const downloadImage = async () => {
             const panel = wordsPanel.value || { download: () => {} };
