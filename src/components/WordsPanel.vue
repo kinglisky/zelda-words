@@ -104,6 +104,9 @@ export default defineComponent({
         const download = () => exportImage(container.value, {
             size: Number(props.size),
             message: props.words,
+            vertical: props.vertical,
+            fontColor: props.fontColor,
+            backgroundColor: props.backgroundColor,
             width: groups.value.containerWidth,
             height: groups.value.containerHeight,
         }).catch(error => {

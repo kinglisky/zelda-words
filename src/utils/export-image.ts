@@ -1,5 +1,6 @@
 import domtoimage from 'dom-to-image';
-import { writeMetaInfo } from './image-meta';
+import { writeMetaInfo } from './image-info';
+
 
 // fix 节点中 svg 图标依赖
 function fixSvgIconNode(node: HTMLBaseElement): boolean {
@@ -21,20 +22,14 @@ function fixSvgIconNode(node: HTMLBaseElement): boolean {
     }
     return true;
 }
-
-function putToCanvas(pixels: ImageData) {
-    const canvas = document.createElement('canvas');
-    canvas.width = pixels.width;
-    canvas.height = pixels.height;
-    const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
-    ctx.putImageData(pixels, 0, 0);
-    return canvas;
-}
 interface ExportOptions {
     size: number,
     width: number,
     height: number,
     message: string,
+    vertical: boolean,
+    fontColor: string,
+    backgroundColor: string,
 }
 
 export default async function exportImage(node: HTMLBaseElement | null, options: ExportOptions): Promise<any> {
@@ -45,9 +40,7 @@ export default async function exportImage(node: HTMLBaseElement | null, options:
     const pixels: any = await domtoimage.toPixelData(node, {
         filter: (n: any) => fixSvgIconNode(n),
     });
-
-    const mergePixels = await writeMetaInfo(pixels, options);
-    const canvas = putToCanvas(new ImageData(mergePixels, options.width, options.height));
+    const canvas = writeMetaInfo(pixels, options);
     const dataUrl = canvas.toDataURL('image/jpeg', 1);
     const link = document.createElement('a');
     link.download = `zelda-words-${Date.now()}.jpeg`;

@@ -29,9 +29,10 @@
                     type="number"
                     id="font-size-input"
                     min="20"
-                    max="300"
+                    max="200"
                     step="2"
                     v-model="size"
+                    @blur="resetSize"
                 />
             </label>
 
@@ -82,7 +83,6 @@
 import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
-import './utils/image-info';
 
 export default defineComponent({
     name: 'App',
@@ -102,10 +102,16 @@ export default defineComponent({
         const loading = ref(false);
         const limitSize = computed(() => {
             let value = Number(size.value);
+            // 转偶数像素
+            value = value % 2 === 0 ? value : value - 1;
             value = Math.max(20, value);
             value = Math.min(200, value);
             return String(value);
         });
+
+        const resetSize = () => {
+            size.value = limitSize.value;
+        };
 
         const downloadImage = async () => {
             const panel = wordsPanel.value || { download: () => {} };
@@ -126,6 +132,7 @@ export default defineComponent({
         return {
             size,
             limitSize,
+            resetSize,
             fontColor,
             backgroundColor,
             vertical,

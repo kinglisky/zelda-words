@@ -10,7 +10,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from 'vue';
-import { readMetaInfo } from '../utils/image-meta';
+import { readMetaInfo } from '../utils/image-info';
+import wordMapImageUrl from '../assets/map.jpeg';
 
 export default defineComponent({
     name: 'ParsePanel',
@@ -35,7 +36,7 @@ export default defineComponent({
         const parseImage = async () => {
             loading.value = true;
             try {
-                metaInfo.value = await readMetaInfo(props.url);
+                metaInfo.value = await readMetaInfo(props.url, wordMapImageUrl);
             } catch (error) {
                 console.log(error);
                 metaInfo.value = error.message || '图片信息解析出错！';
