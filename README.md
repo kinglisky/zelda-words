@@ -8,6 +8,8 @@
 
 github.io 如果打不开戳这里：http://nlush.com/zelda-words/
 
+桌面端效果比较好，移动端没测过~
+
 - https://3type.cn/3typezine/typebites/01.html
 - https://www.dcode.fr/sheikah-language
 - https://zelda.gamepedia.com/Sheikah_Language_Translations
