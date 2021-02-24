@@ -230,7 +230,7 @@ interface SplitOptions {
     fingerprint: number,
 }
 
-function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
+function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions, log?: Boolean) {
     const {
         width,
         height,
@@ -241,10 +241,11 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
     const w = Math.floor(width / size);
     const h = Math.floor(height / size);
     const grids = Array.from({ length: w * h }).fill(null);
-    // 开1 ~ w - 1 剔除掉边框空格
+    // 开头 1 ~ w - 1 剔除掉边框空格
     for (let i = 1; i < w - 1; i++) {
         for (let j = 1; j < h - 1; j++) {
             const imageData = ctx.getImageData(i * size, j * size, size, size);
+            // const unitizeData = unitizeImageData(imageData);
             const inputCanvas = createCavans(size, size);
             const inputCtx = <CanvasRenderingContext2D>inputCanvas.getContext('2d');
             inputCtx.putImageData(imageData, 0, 0);
@@ -253,6 +254,9 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
             outputCtx.drawImage(inputCanvas, 0, 0, size, size, 0, 0, fingerprint, fingerprint);
             const outputImageData = outputCtx.getImageData(0, 0, fingerprint, fingerprint);
             const outputHash = binaryzationOutput(outputImageData);
+            if (log) {
+                console.log(outputCavans.toDataURL());
+            }
             const index = j * w + i;
             grids[index] = outputHash;
         }
@@ -264,7 +268,7 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
     };
 }
 
-async function getImageFingerprint(url: string) {
+async function getImageFingerprint(url: string, log?: boolean) {
     const image = await loadImage(url);
     const { naturalWidth, naturalHeight } = image;
     const canvasWidth = getLcm(naturalWidth, 24);
@@ -280,7 +284,7 @@ async function getImageFingerprint(url: string) {
         height: canvasHeight,
         size: headMeta.size,
         fingerprint: 8,
-    });
+    }, log);
     return {
         hashList: grids,
         row,
@@ -358,7 +362,7 @@ function printfSymbol(words: Array<string>, options: any) {
 export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const mapFingerprint = await getImageFingerprint(mapUrl);
     const symbols = createSymbols(mapFingerprint.hashList);
-    const imageFingerprint = await getImageFingerprint(imageUrl);
+    const imageFingerprint = await getImageFingerprint(imageUrl, true);
     const words = mapToSymbol(imageFingerprint.hashList, symbols);
     return printfSymbol(words, {
         row: imageFingerprint.row,
