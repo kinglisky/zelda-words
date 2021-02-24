@@ -261,6 +261,7 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
 
     const w = Math.floor(width / size);
     const h = Math.floor(height / size);
+    console.log({ w, h });
     const grids = Array.from({ length: w * h }).fill(null);
     // 开头 1 ~ w - 1 剔除掉边框空格
     for (let i = 1; i < w - 1; i++) {
@@ -373,7 +374,7 @@ function printfSymbol(words: Array<string>, options: any) {
 export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const mapFingerprint = await getImageFingerprint(mapUrl);
     const symbols = createSymbols(mapFingerprint.hashList);
-    const imageFingerprint = await getImageFingerprint(imageUrl, true);
+    const imageFingerprint = await getImageFingerprint(imageUrl);
     const words = mapToSymbol(imageFingerprint.hashList, symbols);
     return printfSymbol(words, {
         row: imageFingerprint.row,
