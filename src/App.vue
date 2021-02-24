@@ -49,7 +49,7 @@
                 class="button-input"
                 @click="downloadImage"
             >
-                {{ loading ? 'Download...' : 'Download Image' }}
+                {{ loading ? 'Download...' : 'Download' }}
             </span>
         </section>
 
@@ -180,20 +180,18 @@ body {
 }
 
 .header {
-    display: flex;
-    align-items: center;
+    padding: 16px 0;
     width: 100%;
-    height: 80px;
     border-bottom: 1px solid #fff;
 }
 
 .button-input {
     position: relative;
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
     height: 50%;
-    padding: 0 16px;
+    padding: 16px;
     color: #fff;
     font-size: 14px;
     border: 1px solid #fff;
@@ -217,7 +215,7 @@ body {
 }
 
 .color-input {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
     height: 100%;
@@ -257,5 +255,37 @@ body {
     height: 100%;
     overflow-x: auto;
     overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 0;
+    }
+    
+    .button-input, .color-input {
+        display: flex;
+        width: 100vw;
+        height: 32px;
+        margin: 16px 0 !important;
+        justify-content: start;
+        border: none;
+    }
+
+    .button-input {
+        border: 1px solid #fff;
+        padding: 0 32px;
+    }
+    .content {
+        flex-direction: column;
+    }
+
+    .words {
+        width: 100%;
+        height: 200px;
+    }
+
+    .results {
+        width: 100%;
+    }
 }
 </style>
