@@ -1,8 +1,5 @@
 const BIT_LENGTH = 24;
-const MAX_CANVAS_SIZE = 4096;
-const UA = window.navigator.userAgent;
-const IS_MOBILE = /Android|iPhone|webOS|BlackBerry|SymbianOS|Windows Phone|iPad|iPod/i.test(UA);
-const IS_IOS = !!UA.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+const MAX_AREA_SIZE = 16777216;
 
 function paddingLfet(bits: string) {
     return ('00000000' + bits).slice(-8);
@@ -288,12 +285,16 @@ async function getImageFingerprint(url: string) {
     const image = await loadImage(url);
     const { naturalWidth, naturalHeight } = image;
     let canvasWidth = getLcm(naturalWidth, 24);
-    // fix ios
-    if (IS_IOS && canvasWidth > MAX_CANVAS_SIZE) {
-        canvasWidth = MAX_CANVAS_SIZE;
+    let ratio = canvasWidth / naturalWidth;
+    let canvasHeight = Math.round(ratio * naturalHeight);
+    const area = canvasWidth * canvasHeight;
+    // fix ios canvas max area size
+    if (area > MAX_AREA_SIZE) {
+        const resizeRatio = MAX_AREA_SIZE / area;
+        canvasWidth = Math.floor(canvasWidth * resizeRatio);
+        canvasHeight = Math.floor(canvasHeight * resizeRatio);
+        ratio = canvasWidth / naturalWidth;
     }
-    const ratio = canvasWidth / naturalWidth;
-    const canvasHeight = Math.round(ratio * naturalHeight);
     const canvas = createCavans(canvasWidth, canvasHeight);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     ctx.drawImage(image, 0, 0, naturalWidth, naturalHeight, 0, 0, canvasWidth, canvasHeight);
