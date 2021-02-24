@@ -1,4 +1,4 @@
-# 塞尔达游戏席卡文字转换
+# 塞尔达游戏希卡文字转换器
 
 ![字典](./map.jpeg)
 
@@ -9,7 +9,18 @@
 github.io 如果打不开戳这里：http://nlush.com/zelda-words/
 
 桌面端效果比较好，移动端没测过~
+## 英文 -> 希卡文字映射
+- 映射规则
+- 前端出图
+- 隐藏图片信息
+    - 通道最低变换量
+    - 不可见水印
+    - 傅里叶变化
+## 希卡文 -> 英文字映射
 
+- 相似图片识别
+
+## 链接资料
 - https://3type.cn/3typezine/typebites/01.html
 - https://www.dcode.fr/sheikah-language
 - https://zelda.gamepedia.com/Sheikah_Language_Translations
