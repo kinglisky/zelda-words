@@ -73,7 +73,8 @@ export default defineComponent({
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 600px;
+    max-width: 600px;
+    width: 80%;
     height: 50%;
     background: #fff;
     border-radius: 4px;
