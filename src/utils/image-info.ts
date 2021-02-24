@@ -145,6 +145,16 @@ const toGray = (data: ImageData) => {
     return data;
 };
 
+// 像素平均值图片阈值
+const average = (data: Uint8ClampedArray) => {
+    let sum = 0;
+    // 因为是灰度图片，取第一通道的值就好
+    for (let i = 0; i < data.length - 1; i += 4) {
+        sum += data[i];
+    }
+    return Math.round(sum / (data.length / 4));
+};
+
 // 大津法取图片阈值
 const otsu = (data: Uint8ClampedArray) => {
     let ptr = 0;
@@ -209,9 +219,9 @@ function unitizeImageData(imageData: ImageData) {
 }
 
 function binaryzationOutput(imageData: ImageData) {
-    const grayImageData = toGray(imageData)
+    const grayImageData = toGray(imageData);
     const { width, height, data } = grayImageData;
-    const threshold = otsu(data);
+    const threshold = average(data);
     const value = data[0] > threshold ? [0, 1] : [1, 0];
     const hash = new Uint8Array(width * height);
     for (let i = 0; i < width; i++) {
@@ -230,7 +240,18 @@ interface SplitOptions {
     fingerprint: number,
 }
 
-function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions, log?: Boolean) {
+function resizeImageData(imageData: ImageData, inputSize: number, outputSize: number) {
+    const inputCanvas = createCavans(inputSize, inputSize);
+    const inputCtx = <CanvasRenderingContext2D>inputCanvas.getContext('2d');
+    inputCtx.putImageData(imageData, 0, 0);
+    const outputCavans = createCavans(outputSize, outputSize);
+    const outputCtx = <CanvasRenderingContext2D>outputCavans.getContext('2d');
+    outputCtx.drawImage(inputCanvas, 0, 0, inputSize, inputSize, 0, 0, outputSize, outputSize);
+    const outputImageData = outputCtx.getImageData(0, 0, outputSize, outputSize);
+    return outputImageData;
+}
+
+function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions) {
     const {
         width,
         height,
@@ -245,18 +266,8 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions, log?: B
     for (let i = 1; i < w - 1; i++) {
         for (let j = 1; j < h - 1; j++) {
             const imageData = ctx.getImageData(i * size, j * size, size, size);
-            // const unitizeData = unitizeImageData(imageData);
-            const inputCanvas = createCavans(size, size);
-            const inputCtx = <CanvasRenderingContext2D>inputCanvas.getContext('2d');
-            inputCtx.putImageData(imageData, 0, 0);
-            const outputCavans = createCavans(fingerprint, fingerprint);
-            const outputCtx = <CanvasRenderingContext2D>outputCavans.getContext('2d');
-            outputCtx.drawImage(inputCanvas, 0, 0, size, size, 0, 0, fingerprint, fingerprint);
-            const outputImageData = outputCtx.getImageData(0, 0, fingerprint, fingerprint);
-            const outputHash = binaryzationOutput(outputImageData);
-            if (log) {
-                console.log(outputCavans.toDataURL());
-            }
+            const resizeData = resizeImageData(imageData, size, fingerprint);
+            const outputHash = binaryzationOutput(resizeData);
             const index = j * w + i;
             grids[index] = outputHash;
         }
@@ -268,7 +279,7 @@ function splitGrid(ctx: CanvasRenderingContext2D, options: SplitOptions, log?: B
     };
 }
 
-async function getImageFingerprint(url: string, log?: boolean) {
+async function getImageFingerprint(url: string) {
     const image = await loadImage(url);
     const { naturalWidth, naturalHeight } = image;
     const canvasWidth = getLcm(naturalWidth, 24);
@@ -284,7 +295,7 @@ async function getImageFingerprint(url: string, log?: boolean) {
         height: canvasHeight,
         size: headMeta.size,
         fingerprint: 8,
-    }, log);
+    });
     return {
         hashList: grids,
         row,
