@@ -76,6 +76,11 @@
             :url="parseImageUrl"
             @close="showParsePanel = false"
         />
+        <Download
+            v-if="showDownload"
+            :url="downloadUrl"
+            @close="showDownload = false"
+        />
     </main>
 </template>
 
@@ -83,6 +88,7 @@
 import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
+import Download from './components/Download.vue';
 
 export default defineComponent({
     name: 'App',
@@ -90,6 +96,7 @@ export default defineComponent({
     components: {
         WordsPanel,
         ParsePanel,
+        Download,
     },
 
     setup: () => {
@@ -113,10 +120,17 @@ export default defineComponent({
             size.value = limitSize.value;
         };
 
+        const showDownload = ref(false);
+        const downloadUrl = ref('');
+
         const downloadImage = async () => {
             const panel = wordsPanel.value || { download: () => {} };
             loading.value = true;
-            await panel.download();
+            const url = await panel.download();
+            if (url) {
+                downloadUrl.value = url;
+                showDownload.value = true;
+            }
             loading.value = false;
         };
 
@@ -128,7 +142,7 @@ export default defineComponent({
             showParsePanel.value = true;
             target.value = '';
         };
-    
+
         return {
             size,
             limitSize,
@@ -143,6 +157,8 @@ export default defineComponent({
             uploadImage,
             parseImageUrl,
             showParsePanel,
+            showDownload,
+            downloadUrl,
         };
     },
 });
