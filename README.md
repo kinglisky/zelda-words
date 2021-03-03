@@ -27,3 +27,6 @@ github.io 如果打不开戳这里：http://nlush.com/zelda-words/
 - https://www.chikyukotobamura.org/muse/wr_fiction_3.html
 - https://fontstruct.com/fontstructions/show/1371125/sheikah-complete
 - https://sspai.com/post/65081
+
+100, 200
+01100100,11001000
