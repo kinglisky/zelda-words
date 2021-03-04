@@ -20,7 +20,6 @@
 
     function write(data) {
         const bits = data.reduce((s, it) => s + paddingLfet(it.toString(2)), '');
-        console.log(bits);
         const size = 100;
         const width = size * bits.length;
         const canvas = document.createElement('canvas');
