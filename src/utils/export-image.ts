@@ -1,5 +1,4 @@
 import domtoimage from 'dom-to-image';
-import { writeMetaInfo } from './image-info';
 
 const IS_MOBILE = /Android|iPhone|webOS|BlackBerry|SymbianOS|Windows Phone|iPad|iPod/i.test(window.navigator.userAgent);
 
@@ -38,11 +37,11 @@ export default async function exportImage(node: HTMLBaseElement | null, options:
         return Promise.resolve('');
     }
 
-    const pixels: any = await domtoimage.toPixelData(node, {
+    const dataUrl = await domtoimage.toJpeg(node, {
         filter: (n: any) => fixSvgIconNode(n),
+        quality: 1
     });
-    const canvas = writeMetaInfo(pixels, options);
-    const dataUrl = canvas.toDataURL('image/jpeg', 1);
+
     if (!IS_MOBILE) {
         const link = document.createElement('a');
         link.download = `zelda-words-${Date.now()}.jpeg`;

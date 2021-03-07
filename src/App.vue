@@ -89,6 +89,7 @@ import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
 import Download from './components/Download.vue';
+import './utils/image-ocr';
 
 export default defineComponent({
     name: 'App',

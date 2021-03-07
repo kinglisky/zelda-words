@@ -25,3 +25,6 @@ github.io 如果打不开戳这里：http://nlush.com/zelda-words/
 - [游戏玩家的浪漫——教你用希卡文字写一封情书](https://sspai.com/post/65081)
 - [sheikah-language](https://www.dcode.fr/sheikah-language)
 - [Sheikah_Language_Translations](https://zelda.gamepedia.com/Sheikah_Language_Translations)
+
+https://www.cnblogs.com/polly333/p/7238197.html
+https://blog.csdn.net/Print_lin/article/details/80143002?spm=1001.2014.3001.5501
