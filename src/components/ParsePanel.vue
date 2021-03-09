@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from 'vue';
-import { readMetaInfo } from '../utils/image-info';
+import { readMetaInfo } from '../utils/image-ocr';
 import wordMapImageUrl from '../assets/map.jpeg';
 
 export default defineComponent({

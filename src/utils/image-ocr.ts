@@ -81,6 +81,7 @@ function unitizeImageData(imageData: ImageData) {
     if (Math.pow(threshold - data[0], 2) < 4) {
         threshold = average(data);
     }
+    debugger;
     const colors = data[0] > threshold ? [0, 255] : [255, 0];
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
@@ -227,7 +228,15 @@ function createChunks(data: Array<Rang>): Array<any> {
     return chunks;
 }
 
-function splitImage(image: HTMLImageElement) {
+type Chunk = {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    canvas: HTMLCanvasElement,
+};
+
+function splitImage(image: HTMLImageElement): Array<Chunk> {
     const {
         naturalWidth: width,
         naturalHeight: height,
@@ -256,16 +265,120 @@ function splitImage(image: HTMLImageElement) {
     );
 
     const rowsChunks = createChunks(mergeRanges(rowsRanges, fontRange));
-    rowsChunks.forEach((chunk) => {
-        const chunkCanvas = createCavans(width, chunk.size);
-        const chunkCtx = <CanvasRenderingContext2D>chunkCanvas.getContext('2d');
-        const chunkImageData = unitizeCtx.getImageData(0, chunk.offset, width, chunk.size);
-        chunkCtx.putImageData(chunkImageData, 0, 0);
-        console.log(chunkCanvas.toDataURL());
+    const res: any[] = [];
+    rowsChunks.forEach((row) => {
+        const rowImageData = unitizeCtx.getImageData(0, row.offset, width, row.size);
+        const rowRanges = countRanges(countPixel(rowImageData, false));
+        const rowChunks = createChunks(mergeRanges(rowRanges, fontRange));
+        rowChunks.forEach((item) => {
+            const itemCanvas = createCavans(item.size, row.size);
+            const itemCtx = <CanvasRenderingContext2D>itemCanvas.getContext('2d');
+            const itemImageData = unitizeCtx.getImageData(item.offset, row.offset, item.size, row.size);
+            itemCtx.putImageData(itemImageData, 0, 0);
+            res.push({
+                x: item.size,
+                y: row.offset,
+                width: item.size,
+                height: item.size,
+                canvas: itemCanvas,
+            });
+        });
+    });
+    return res;
+}
+
+function binaryzationOutput(imageData: ImageData) {
+    const grayImageData = toGray(imageData);
+    const { width, height, data } = grayImageData;
+    // let threshold = otsu(data);
+    // 大津处理背景与前景颜色相近的图片时，效果不好，这里回退到均值哈希来求阈值
+    // if (Math.pow(threshold - data[0], 2) < 4) {
+    //     threshold = average(data);
+    // }
+    const threshold = average(data);
+    const value = data[0] > threshold ? [0, 1] : [1, 0];
+    const hash = new Uint8Array(width * height);
+    for (let i = 0; i < width; i++) {
+        for (let j = 0; j < height; j++) {
+            const index = (j * width + i);
+            const v = data[index * 4] > threshold ? value[0] : value[1];
+            hash.set([v], index);
+        }
+    }
+    return hash;
+}
+
+function resizeCanvas(inputCanvas: HTMLCanvasElement, size: number) {
+    const outputCavans = createCavans(size, size);
+    const outputCtx = <CanvasRenderingContext2D>outputCavans.getContext('2d');
+    outputCtx.drawImage(inputCanvas, 0, 0, inputCanvas.width, inputCanvas.height, 0, 0, size, size);
+    // console.log(outputCavans.toDataURL());
+    return outputCtx.getImageData(0, 0, size, size);
+}
+
+async function createImageFingerprints(url: string, log: boolean) {
+    const image = await loadImage(url);
+    const contents = splitImage(image);
+    return contents.map(({ canvas, ...args }) => {
+        if (log) {
+            console.log(canvas.toDataURL());   
+        }
+        const imageData = resizeCanvas(canvas, 8);
+        const hash = binaryzationOutput(imageData);
+        return {
+            ...args,
+            hash,
+        };
+    });
+}
+const WORDS = 'abcdefghijklmnopqrstuvwxyz0123456789.-!?';
+
+function createSymbols(fingerprints: Array<any>) {
+    return fingerprints.map((it, index) => {
+        return {
+            name: WORDS[index],
+            value: it.hash,
+        };
     });
 }
 
-(async function () {
-    const image = await loadImage(MAP_URL);
-    splitImage(image);
-})();
+
+function hammingDistance (hash1: Uint8Array, hash2: Uint8Array) {
+    let count = 0;
+    hash1.forEach((it, index) => {
+        count += it ^ hash2[index];
+    });
+    return count;
+};
+
+function mapToSymbol(fingerprints: Array<any>, symbols: Array<any>) {
+    return fingerprints.map(({ hash }) => {
+        const isEmpty = hash.every((v: number) => v === hash[0]);
+        if (isEmpty) {
+            return ' ';
+        }
+        let diff = Number.MAX_SAFE_INTEGER;
+        let target = '-';
+        let sum = 0;
+        symbols.forEach(symbol => {
+            const distance = hammingDistance(hash, symbol.value);
+            // console.log(distance);
+            sum += distance;
+            // 汉明距离大于标识相似度偏差较大排除
+            if (distance < diff) {
+                diff = distance;
+                target = symbol.name;
+            }
+        });
+        console.log('avg', sum / symbols.length);
+        return target;
+    });
+}
+
+export async function readMetaInfo(imageUrl: string, mapUrl: string) {
+    const mapFingerprints = await createImageFingerprints(mapUrl, false);
+    const symbols = createSymbols(mapFingerprints);
+    const imageFingerprints = await createImageFingerprints(imageUrl, true);
+    const words = mapToSymbol(imageFingerprints, symbols);
+    console.log(words);
+}
