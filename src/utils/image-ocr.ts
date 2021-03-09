@@ -1,4 +1,4 @@
-import MAP_URL from '../assets/map4.jpeg';
+import MAP_URL from '../assets/map3.jpeg';
 
 function toGray(data: ImageData) {
     const calculateGray = (r: number, g: number, b: number) =>
@@ -183,7 +183,7 @@ function getFontRange(data: Array<Rang>) {
     }, 0);
 }
 
-function mergeRanges(data: Array<Rang>, size: number) {
+function mergeRanges(data: Array<Rang>, size: number): Array<Rang> {
     const merge: any[] = [];
     let chunks: any[] = [];
     data.forEach((item) => {
@@ -208,19 +208,37 @@ function mergeRanges(data: Array<Rang>, size: number) {
     return merge;
 }
 
+function createChunks(data: Array<Rang>): Array<any> {
+    const chunks: any[] = [];
+    let offset = 0;
+    data.forEach((item) => {
+        if (item.foreground) {
+            chunks.push({
+                offset,
+                size: item.value,
+            });
+        }
+        offset += item.value;
+    });
+    return chunks;
+}
+
 function splitImage(image: HTMLImageElement) {
-    const { naturalWidth, naturalHeight } = image;
-    const canvas = createCavans(naturalWidth, naturalHeight);
+    const {
+        naturalWidth: width,
+        naturalHeight: height,
+    } = image;
+    const canvas = createCavans(width, height);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     ctx.drawImage(image, 0, 0);
     const imageData = unitizeImageData(
-        ctx.getImageData(0, 0, naturalWidth, naturalHeight)
+        ctx.getImageData(0, 0, width, height)
     );
-    const unitizeCanvas = createCavans(naturalWidth, naturalHeight);
+    const unitizeCanvas = createCavans(width, height);
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
-    console.log(unitizeCanvas.toDataURL());
+    // console.log(unitizeCanvas.toDataURL());
 
     const rowsRanges = countRanges(countPixel(imageData, true));
     const colsRanges = countRanges(countPixel(imageData, false));
@@ -229,9 +247,14 @@ function splitImage(image: HTMLImageElement) {
         getFontRange(rowsRanges),
         getFontRange(colsRanges)
     );
-    const rowsPositions = mergeRanges(rowsRanges, fontRange);
-    window.rowsPositions = rowsPositions;
-    console.log({ rowsRanges, colsRanges, fontRange, rowsPositions });
+    const rowsChunks = createChunks(mergeRanges(rowsRanges, fontRange));
+    rowsChunks.forEach((chunk) => {
+        const chunkCanvas = createCavans(width, chunk.size);
+        const chunkCtx = <CanvasRenderingContext2D>chunkCanvas.getContext('2d');
+        const chunkImageData = unitizeCtx.getImageData(0, chunk.offset, width, chunk.size);
+        chunkCtx.putImageData(chunkImageData, 0, 0);
+        console.log(chunkCanvas.toDataURL());
+    });
 }
 
 (async function () {
