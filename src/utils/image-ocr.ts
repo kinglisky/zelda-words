@@ -1,4 +1,4 @@
-import MAP_URL from '../assets/map3.jpeg';
+import MAP_URL from '../assets/map.jpeg';
 
 function toGray(data: ImageData) {
     const calculateGray = (r: number, g: number, b: number) =>
@@ -76,7 +76,11 @@ function otsu(data: Uint8ClampedArray) {
 function unitizeImageData(imageData: ImageData) {
     const grayImageData = toGray(imageData);
     const { width, height, data } = grayImageData;
-    const threshold = otsu(data);
+    let threshold = otsu(data);
+    // 大津处理背景与前景颜色相近的图片时，效果不好，这里回退到均值哈希来求阈值
+    if (Math.pow(threshold - data[0], 2) < 4) {
+        threshold = average(data);
+    }
     const colors = data[0] > threshold ? [0, 255] : [255, 0];
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
@@ -88,7 +92,7 @@ function unitizeImageData(imageData: ImageData) {
             data[index + 3] = 255;
         }
     }
-    return imageData;
+    return grayImageData;
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -174,7 +178,7 @@ function countRanges(counts: Array<number>): Array<Rang> {
     return groups;
 }
 
-function getFontRange(data: Array<Rang>) {
+function getMaxRange(data: Array<Rang>) {
     return data.reduce((max, it) => {
         if (it.foreground) {
             return Math.max(max, it.value);
@@ -238,15 +242,19 @@ function splitImage(image: HTMLImageElement) {
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
-    // console.log(unitizeCanvas.toDataURL());
+    console.log(unitizeCanvas.toDataURL());
 
+    // 逐行扫描
     const rowsRanges = countRanges(countPixel(imageData, true));
+    // 逐列扫描
     const colsRanges = countRanges(countPixel(imageData, false));
+
     // 计算横纵像素分布得出字体内容的大小（字体正方形区域）
     const fontRange = Math.max(
-        getFontRange(rowsRanges),
-        getFontRange(colsRanges)
+        getMaxRange(rowsRanges),
+        getMaxRange(colsRanges)
     );
+
     const rowsChunks = createChunks(mergeRanges(rowsRanges, fontRange));
     rowsChunks.forEach((chunk) => {
         const chunkCanvas = createCavans(width, chunk.size);
