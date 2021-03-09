@@ -76,17 +76,17 @@ function otsu(data: Uint8ClampedArray) {
 function unitizeImageData(imageData: ImageData) {
     const grayImageData = toGray(imageData);
     const { width, height, data } = grayImageData;
-    let threshold = otsu(data);
+    // let threshold = otsu(data);
     // 大津处理背景与前景颜色相近的图片时，效果不好，这里回退到均值哈希来求阈值
-    if (Math.pow(threshold - data[0], 2) < 4) {
-        threshold = average(data);
-    }
-    debugger;
+    // if (Math.pow(threshold - data[0], 2) < 4) {
+    //     threshold = average(data);
+    // }
+    const threshold = average(data)
     const colors = data[0] > threshold ? [0, 255] : [255, 0];
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
             const index = (j * width + i) * 4;
-            const v = data[index] > threshold ? colors[0] : colors[1];
+            const v = data[index] >= threshold ? colors[0] : colors[1];
             data[index] = v;
             data[index + 1] = v;
             data[index + 2] = v;
