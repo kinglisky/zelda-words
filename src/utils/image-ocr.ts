@@ -1,5 +1,3 @@
-import MAP_URL from '../assets/map.jpeg';
-
 function toGray(data: ImageData) {
     const calculateGray = (r: number, g: number, b: number) =>
         Math.floor(r * 0.299 + g * 0.587 + b * 0.114);
