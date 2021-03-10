@@ -289,6 +289,9 @@ body {
 }
 
 @media (max-width: 768px) {
+    .container {
+        flex-direction: column-reverse;
+    }
     .header {
         display: block;
         height: auto;
@@ -309,7 +312,7 @@ body {
     }
 
     .content {
-        flex-direction: column;
+        flex-direction: column-reverse;
         flex: 1;
     }
 
