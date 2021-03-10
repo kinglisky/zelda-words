@@ -1,6 +1,7 @@
 function toGray(data: ImageData) {
     const calculateGray = (r: number, g: number, b: number) =>
         Math.floor(r * 0.299 + g * 0.587 + b * 0.114);
+    const res = [];
     for (let x = 0; x < data.width; x++) {
         for (let y = 0; y < data.height; y++) {
             const idx = (x + y * data.width) * 4;
@@ -8,58 +9,46 @@ function toGray(data: ImageData) {
             const g = data.data[idx + 1];
             const b = data.data[idx + 2];
             const gray = calculateGray(r, g, b);
-            data.data[idx + 0] = gray;
-            data.data[idx + 1] = gray;
-            data.data[idx + 2] = gray;
-            data.data[idx + 3] = 255;
+            res.push(gray);
         }
     }
-    return data;
+    return res;
 }
 
-function average(data: Uint8ClampedArray) {
-    let sum = 0;
-    // 因为是灰度图片，取第一通道的值就好
-    for (let i = 0; i < data.length - 1; i += 4) {
-        sum += data[i];
-    }
-    return Math.round(sum / (data.length / 4));
-}
-
-// 大津法取图片阈值
-function otsu(data: Uint8ClampedArray) {
+function otsu(imgData: ImageData) {
+    const grayData = toGray(imgData);
     let ptr = 0;
-    let histData = Array(256).fill(0); // 记录0-256每个灰度值的数量，初始值为0
-    let total = data.length;
+    let histData = Array(256).fill(0);
+    let total = grayData.length;
 
     while (ptr < total) {
-        let h = data[ptr++];
+        let h = 0xff & grayData[ptr++];
         histData[h]++;
     }
 
-    let sum = 0; // 总数(灰度值x数量)
+    let sum = 0;
     for (let i = 0; i < 256; i++) {
         sum += i * histData[i];
     }
 
-    let wB = 0; // 背景（小于阈值）的数量
-    let wF = 0; // 前景（大于阈值）的数量
-    let sumB = 0; // 背景图像（灰度x数量）总和
-    let varMax = 0; // 存储最大类间方差值
-    let threshold = 0; // 阈值
+    let wB = 0;
+    let wF = 0;
+    let sumB = 0;
+    let varMax = 0;
+    let threshold = 0;
 
     for (let t = 0; t < 256; t++) {
-        wB += histData[t]; // 背景（小于阈值）的数量累加
+        wB += histData[t];
         if (wB === 0) continue;
-        wF = total - wB; // 前景（大于阈值）的数量累加
+        wF = total - wB;
         if (wF === 0) break;
 
-        sumB += t * histData[t]; // 背景（灰度x数量）累加
+        sumB += t * histData[t];
 
-        let mB = sumB / wB; // 背景（小于阈值）的平均灰度
-        let mF = (sum - sumB) / wF; // 前景（大于阈值）的平均灰度
+        let mB = sumB / wB;
+        let mF = (sum - sumB) / wF;
 
-        let varBetween = wB * wF * (mB - mF) ** 2; // 类间方差
+        let varBetween = wB * wF * (mB - mF) ** 2;
 
         if (varBetween > varMax) {
             varMax = varBetween;
@@ -72,26 +61,21 @@ function otsu(data: Uint8ClampedArray) {
 
 // 统一转成黑底白色的图片
 function unitizeImageData(imageData: ImageData) {
-    const grayImageData = toGray(imageData);
-    const { width, height, data } = grayImageData;
-    // let threshold = otsu(data);
-    // 大津处理背景与前景颜色相近的图片时，效果不好，这里回退到均值哈希来求阈值
-    // if (Math.pow(threshold - data[0], 2) < 4) {
-    //     threshold = average(data);
-    // }
-    const threshold = average(data)
+    const { width, height, data } = imageData;
+    const threshold = otsu(imageData);
     const colors = data[0] > threshold ? [0, 255] : [255, 0];
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
             const index = (j * width + i) * 4;
-            const v = data[index] >= threshold ? colors[0] : colors[1];
+            const avg = (data[index] + data[index + 1] + data[index + 2]) / 3;
+            const v = avg >= threshold ? colors[0] : colors[1];
             data[index] = v;
             data[index + 1] = v;
             data[index + 2] = v;
             data[index + 3] = 255;
         }
     }
-    return grayImageData;
+    return imageData;
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -227,29 +211,26 @@ function createChunks(data: Array<Rang>): Array<any> {
 }
 
 type Chunk = {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    canvas: HTMLCanvasElement,
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    canvas: HTMLCanvasElement;
 };
 
-function splitImage(image: HTMLImageElement): Array<Chunk> {
-    const {
-        naturalWidth: width,
-        naturalHeight: height,
-    } = image;
+function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
+    const { naturalWidth: width, naturalHeight: height } = image;
     const canvas = createCavans(width, height);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     ctx.drawImage(image, 0, 0);
-    const imageData = unitizeImageData(
-        ctx.getImageData(0, 0, width, height)
-    );
+    const imageData = unitizeImageData(ctx.getImageData(0, 0, width, height));
     const unitizeCanvas = createCavans(width, height);
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
-    // console.log(unitizeCanvas.toDataURL());
+    if (log) {
+        console.log(unitizeCanvas.toDataURL());
+    }
 
     // 逐行扫描
     const rowsRanges = countRanges(countPixel(imageData, true));
@@ -265,13 +246,25 @@ function splitImage(image: HTMLImageElement): Array<Chunk> {
     const rowsChunks = createChunks(mergeRanges(rowsRanges, fontRange));
     const res: any[] = [];
     rowsChunks.forEach((row) => {
-        const rowImageData = unitizeCtx.getImageData(0, row.offset, width, row.size);
+        const rowImageData = unitizeCtx.getImageData(
+            0,
+            row.offset,
+            width,
+            row.size
+        );
         const rowRanges = countRanges(countPixel(rowImageData, false));
         const rowChunks = createChunks(mergeRanges(rowRanges, fontRange));
         rowChunks.forEach((item) => {
             const itemCanvas = createCavans(item.size, row.size);
-            const itemCtx = <CanvasRenderingContext2D>itemCanvas.getContext('2d');
-            const itemImageData = unitizeCtx.getImageData(item.offset, row.offset, item.size, row.size);
+            const itemCtx = <CanvasRenderingContext2D>(
+                itemCanvas.getContext('2d')
+            );
+            const itemImageData = unitizeCtx.getImageData(
+                item.offset,
+                row.offset,
+                item.size,
+                row.size
+            );
             itemCtx.putImageData(itemImageData, 0, 0);
             res.push({
                 x: item.offset,
@@ -286,14 +279,13 @@ function splitImage(image: HTMLImageElement): Array<Chunk> {
 }
 
 function binaryzationOutput(imageData: ImageData) {
-    const grayImageData = toGray(imageData);
-    const { width, height, data } = grayImageData;
-    const threshold = otsu(data);
+    const { width, height, data } = imageData;
+    const threshold = otsu(imageData);
     const value = data[0] > threshold ? [0, 1] : [1, 0];
     const hash = new Uint8Array(width * height);
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
-            const index = (j * width + i);
+            const index = j * width + i;
             const v = data[index * 4] > threshold ? value[0] : value[1];
             hash.set([v], index);
         }
@@ -304,16 +296,26 @@ function binaryzationOutput(imageData: ImageData) {
 function resizeCanvas(inputCanvas: HTMLCanvasElement, size: number) {
     const outputCavans = createCavans(size, size);
     const outputCtx = <CanvasRenderingContext2D>outputCavans.getContext('2d');
-    outputCtx.drawImage(inputCanvas, 0, 0, inputCanvas.width, inputCanvas.height, 0, 0, size, size);
+    outputCtx.drawImage(
+        inputCanvas,
+        0,
+        0,
+        inputCanvas.width,
+        inputCanvas.height,
+        0,
+        0,
+        size,
+        size
+    );
     return outputCtx.getImageData(0, 0, size, size);
 }
 
 async function createImageFingerprints(image: HTMLImageElement, log: boolean) {
-    const contents = splitImage(image);
+    const contents = splitImage(image, log);
     return contents.map(({ canvas, ...args }) => {
-        if (log) {
-            console.log(canvas.toDataURL());   
-        }
+        // if (log) {
+        //     console.log(canvas.toDataURL());
+        // }
         const imageData = resizeCanvas(canvas, 8);
         const hash = binaryzationOutput(imageData);
         return {
@@ -333,14 +335,13 @@ function createSymbols(fingerprints: Array<any>) {
     });
 }
 
-
-function hammingDistance (hash1: Uint8Array, hash2: Uint8Array) {
+function hammingDistance(hash1: Uint8Array, hash2: Uint8Array) {
     let count = 0;
     hash1.forEach((it, index) => {
         count += it ^ hash2[index];
     });
     return count;
-};
+}
 
 function mapSymbols(fingerprints: Array<any>, symbols: Array<any>) {
     return fingerprints.map(({ hash, ...position }) => {
@@ -350,7 +351,7 @@ function mapSymbols(fingerprints: Array<any>, symbols: Array<any>) {
         }
         let diff = Number.MAX_SAFE_INTEGER;
         let word = '*';
-        symbols.forEach(symbol => {
+        symbols.forEach((symbol) => {
             const distance = hammingDistance(hash, symbol.value);
             // 汉明距离大于标识相似度偏差较大排除
             if (distance < diff) {
@@ -361,11 +362,16 @@ function mapSymbols(fingerprints: Array<any>, symbols: Array<any>) {
         return {
             ...position,
             word,
+            diff,
         };
     });
 }
 
-function printfSymbols(results: Array<any>, width: number, height: number): string {
+function printfSymbols(
+    results: Array<any>,
+    width: number,
+    height: number
+): string {
     const canvas = createCavans(width, height);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     const head = results[0];
@@ -374,8 +380,13 @@ function printfSymbols(results: Array<any>, width: number, height: number): stri
     ctx.font = `${Math.floor(head.width)}px -apple-system, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    results.forEach(item => {
-        ctx.fillText(item.word, item.x + Math.round(item.width / 2), item.y + Math.round(item.height / 2), item.width);
+    results.forEach((item) => {
+        ctx.fillText(
+            item.word,
+            item.x + Math.round(item.width / 2),
+            item.y + Math.round(item.height / 2),
+            item.width
+        );
     });
     return canvas.toDataURL();
 }
@@ -385,8 +396,15 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const mapImageFingerprints = await createImageFingerprints(mapImage, false);
     const symbols = createSymbols(mapImageFingerprints);
     const readImage = await loadImage(imageUrl);
-    const readImageFingerprints = await createImageFingerprints(readImage, false);
+    const readImageFingerprints = await createImageFingerprints(
+        readImage,
+        true
+    );
     const results = mapSymbols(readImageFingerprints, symbols);
     console.log(results);
-    return printfSymbols(results, readImage.naturalWidth, readImage.naturalHeight);
+    return printfSymbols(
+        results,
+        readImage.naturalWidth,
+        readImage.naturalHeight
+    );
 }

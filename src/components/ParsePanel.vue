@@ -19,9 +19,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from 'vue';
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
 import { readMetaInfo } from '../utils/image-ocr';
-import wordMapImageUrl from '../assets/map.jpeg';
+import wordMapImageUrl from '../assets/map.png';
 
 export default defineComponent({
     name: 'ParsePanel',
