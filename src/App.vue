@@ -282,8 +282,6 @@ body {
 
 .results {
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex: 2;
     overflow-x: auto;
     overflow-y: auto;
