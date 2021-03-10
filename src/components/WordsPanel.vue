@@ -1,23 +1,25 @@
 <template>
-    <section
-        class="words-panel"
-        ref="container"
-        :class="{ 'words-panel--vertical': vertical }"
-        :style="groups.style"
-    >
+    <section :style="wrapStyle">
         <div
-            class="words-panel__groups"
-            v-for="(group, index) in groups.items"
-            :key="index"
-            :style="group.style"
+            class="words-panel"
+            ref="container"
+            :class="{ 'words-panel--vertical': vertical }"
+            :style="groups.style"
         >
-            <WordIcon
-                v-for="(word, idx) in group.items"
-                :key="idx"
-                :name="word"
-                :width="size"
-                :height="size"
-            />
+            <div
+                class="words-panel__groups"
+                v-for="(group, index) in groups.items"
+                :key="index"
+                :style="group.style"
+            >
+                <WordIcon
+                    v-for="(word, idx) in group.items"
+                    :key="idx"
+                    :name="word"
+                    :width="size"
+                    :height="size"
+                />
+            </div>
         </div>
     </section>
 </template>
@@ -69,18 +71,19 @@ export default defineComponent({
             let width = 0;
             let height = 0;
             const size = Number(props.size);
-            const items = props.words.toLowerCase()
+            const items = props.words
+                .toLowerCase()
                 .split('\n')
-                .map(word => {
+                .map((word) => {
                     const containerSize = word.length * size;
                     width = Math.max(containerSize, width);
                     height += Number(size);
                     const style = props.vertical
-                        ? { width: `${size}px`, height: `${containerSize}px`}
+                        ? { width: `${size}px`, height: `${containerSize}px` }
                         : { width: `${containerSize}px`, height: `${size}px` };
                     return {
                         style,
-                        items: word.split('').map(v => ICON_MAP[v] || ''),
+                        items: word.split('').map((v) => ICON_MAP[v] || ''),
                     };
                 });
             width += size * 2;
@@ -101,21 +104,37 @@ export default defineComponent({
             };
         });
 
-        const download = () => exportImage(container.value, {
-            size: Number(props.size),
-            message: props.words,
-            vertical: props.vertical,
-            fontColor: props.fontColor,
-            backgroundColor: props.backgroundColor,
-            width: groups.value.containerWidth,
-            height: groups.value.containerHeight,
-        }).catch(error => {
-            window.alert(error.message || '图片导出出错！');
-            console.log(error);
+        const wrapStyle = computed(() => {
+            if (window.innerWidth < 768) {
+                const { innerWidth, innerHeight } = window;
+                const width = innerWidth;
+                const height = innerHeight - 380;
+                const { containerWidth, containerHeight } = groups.value;
+                const ratio = Math.min(
+                    width / containerWidth,
+                    height / containerHeight
+                );
+                return { transform: `scale(${ratio})` };
+            }
+            return {};
         });
+        const download = () =>
+            exportImage(container.value, {
+                size: Number(props.size),
+                message: props.words,
+                vertical: props.vertical,
+                fontColor: props.fontColor,
+                backgroundColor: props.backgroundColor,
+                width: groups.value.containerWidth,
+                height: groups.value.containerHeight,
+            }).catch((error) => {
+                window.alert(error.message || '图片导出出错！');
+                console.log(error);
+            });
 
         return {
             container,
+            wrapStyle,
             groups,
             download,
         };
@@ -125,7 +144,6 @@ export default defineComponent({
 
 <style lang="scss">
 .words-panel {
-
     &__groups {
         display: flex;
     }
@@ -136,7 +154,6 @@ export default defineComponent({
         .words-panel__groups {
             flex-direction: column;
         }
-
     }
 }
 </style>

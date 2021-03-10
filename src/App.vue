@@ -1,64 +1,70 @@
 <template>
     <main class="container">
         <section class="header">
-            <label class="color-input" for="font-color-input">
-                <span>Font Color：</span>
-                <input type="color" id="font-color-input" v-model="fontColor" />
-            </label>
+            <div class="header__group">
+                <label class="header__item" for="font-color-input">
+                    <input
+                        class="header__color"
+                        type="color"
+                        id="font-color-input"
+                        v-model="fontColor"
+                    />
+                </label>
 
-            <label class="color-input" for="background-color-input">
-                <span>Background Color：</span>
-                <input
-                    type="color"
-                    id="background-color-input"
-                    v-model="backgroundColor"
-                />
-            </label>
+                <label class="header__item" for="background-color-input">
+                    <input
+                        class="header__color"
+                        type="color"
+                        id="background-color-input"
+                        v-model="backgroundColor"
+                    />
+                </label>
+            </div>
 
-            <label class="color-input" for="vertical-radio">
-                <span>Vertical：</span>
-                <input
-                    type="checkbox"
-                    v-model="vertical"
-                />
-            </label>
+            <div class="header__group">
+                <label class="header__item" for="vertical-radio">
+                    <span>Vertical：</span>
+                    <input type="checkbox" v-model="vertical" />
+                </label>
 
-            <label class="color-input" for="font-size-input">
-                <span>Font Size：</span>
-                <input
-                    type="number"
-                    id="font-size-input"
-                    min="20"
-                    max="200"
-                    step="2"
-                    v-model="size"
-                    @blur="resetSize"
-                />
-            </label>
+                <label class="header__item" for="font-size-input">
+                    <span>Size：</span>
+                    <input
+                        type="number"
+                        id="font-size-input"
+                        min="20"
+                        max="200"
+                        step="2"
+                        v-model="size"
+                        @blur="resetSize"
+                    />
+                </label>
+            </div>
 
-            <label class="button-input" for="image-upload">
-                <span>Parse Image</span>
-                <input
-                    type="file"
-                    id="image-upload"
-                    accept="image/*"
-                    @change="uploadImage"
-                />
-            </label>
-            <span
-                class="button-input"
-                @click="downloadImage"
-            >
-                {{ loading ? 'Download...' : 'Download' }}
-            </span>
+            <div class="header__group">
+                <label class="header__item header__button" for="image-upload">
+                    <span>Parse Image</span>
+                    <input
+                        class="header__upload"
+                        type="file"
+                        id="image-upload"
+                        accept="image/*"
+                        @change="uploadImage"
+                    />
+                </label>
+                <span
+                    class="header__item header__button"
+                    @click="downloadImage"
+                >
+                    {{ loading ? 'Download...' : 'Download' }}
+                </span>
+            </div>
         </section>
 
         <section class="content">
-            <textarea
-                class="words"
-                placeholder="input..."
-                v-model="words"
-            />
+            <div class="words">
+                <textarea placeholder="input..." v-model="words" />
+            </div>
             <div class="results">
                 <WordsPanel
                     ref="wordsPanel"
@@ -167,9 +173,9 @@ export default defineComponent({
 
 <style lang="scss">
 * {
+    box-sizing: border-box;
     padding: 0;
     margin: 0;
-    box-sizing: border-box;
 }
 body {
     width: 100vw;
@@ -197,25 +203,42 @@ body {
 }
 
 .header {
-    padding: 16px 0;
+    display: flex;
     width: 100%;
+    height: 60px;
     border-bottom: 1px solid #fff;
-}
 
-.button-input {
-    position: relative;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    height: 50%;
-    padding: 16px;
-    color: #fff;
-    font-size: 14px;
-    border: 1px solid #fff;
-    border-radius: 20px;
-    cursor: pointer;
+    &__group {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        height: 100%;
+    }
 
-    input {
+    &__item {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+        height: 100%;
+        color: #fff;
+        border-top: 1px solid #fff;
+        border-right: 1px solid #fff;
+    }
+
+    &__color {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    &__button {
+        cursor: pointer;
+    }
+
+    &__upload {
         position: absolute;
         top: 0;
         left: 0;
@@ -225,75 +248,71 @@ body {
         cursor: pointer;
         opacity: 0;
     }
-
-    & + .button-input {
-        margin-left: 32px;
-    }
-}
-
-.color-input {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    padding: 0 32px;
-    color: #fff;
-
-    span {
-        margin-right: 8px;
-    }
 }
 
 .content {
     display: flex;
     align-items: center;
     flex: 1;
-    width: 100%;
     overflow: hidden;
+    width: 100%;
 }
 
 .words {
-    display: block;
-    width: 400px;
+    flex: 1;
+    box-sizing: border-box;
+    overflow: hidden;
     height: 100%;
-    padding: 32px;
-    color: #fff;
-    font-size: 14px;
-    background-color: transparent;
-    border: none;
-    border-right: 1px solid #fff;
-    outline: none;
-    resize: none;
-    line-height: 2;
+
+    textarea {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 32px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 2;
+        background-color: transparent;
+        border: none;
+        border-right: 1px solid #fff;
+        outline: none;
+        resize: none;
+    }
 }
 
 .results {
-    flex: 1;
-    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 2;
     overflow-x: auto;
     overflow-y: auto;
+    height: 100%;
 }
 
 @media (max-width: 768px) {
     .header {
-        padding: 0;
-    }
-    
-    .button-input, .color-input {
-        display: flex;
-        width: 100vw;
-        height: 32px;
-        margin: 16px 0 !important;
-        justify-content: start;
-        border: none;
+        display: block;
+        height: auto;
+
+        &__group {
+            display: flex;
+            align-items: center;
+            height: 60px;
+        }
+
+        &__item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            border-bottom: 1px solid #fff;
+        }
     }
 
-    .button-input {
-        border: 1px solid #fff;
-        padding: 0 32px;
-    }
     .content {
         flex-direction: column;
+        flex: 1;
     }
 
     .words {

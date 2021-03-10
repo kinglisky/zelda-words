@@ -68,7 +68,7 @@ function unitizeImageData(imageData: ImageData) {
         for (let j = 0; j < height; j++) {
             const index = (j * width + i) * 4;
             const avg = (data[index] + data[index + 1] + data[index + 2]) / 3;
-            const v = avg >= threshold ? colors[0] : colors[1];
+            const v = avg > threshold ? colors[0] : colors[1];
             data[index] = v;
             data[index + 1] = v;
             data[index + 2] = v;
@@ -316,7 +316,7 @@ async function createImageFingerprints(image: HTMLImageElement, log: boolean) {
         // if (log) {
         //     console.log(canvas.toDataURL());
         // }
-        const imageData = resizeCanvas(canvas, 8);
+        const imageData = resizeCanvas(canvas, 16);
         const hash = binaryzationOutput(imageData);
         return {
             ...args,
@@ -398,7 +398,7 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const readImage = await loadImage(imageUrl);
     const readImageFingerprints = await createImageFingerprints(
         readImage,
-        true
+        false
     );
     const results = mapSymbols(readImageFingerprints, symbols);
     console.log(results);
