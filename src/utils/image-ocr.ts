@@ -251,7 +251,7 @@ function splitImage(image: HTMLImageElement): Array<Chunk> {
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
-    console.log(unitizeCanvas.toDataURL());
+    // console.log(unitizeCanvas.toDataURL());
 
     // 逐行扫描
     const rowsRanges = countRanges(countPixel(imageData, true));
@@ -276,7 +276,7 @@ function splitImage(image: HTMLImageElement): Array<Chunk> {
             const itemImageData = unitizeCtx.getImageData(item.offset, row.offset, item.size, row.size);
             itemCtx.putImageData(itemImageData, 0, 0);
             res.push({
-                x: item.size,
+                x: item.offset,
                 y: row.offset,
                 width: item.size,
                 height: item.size,
@@ -290,12 +290,7 @@ function splitImage(image: HTMLImageElement): Array<Chunk> {
 function binaryzationOutput(imageData: ImageData) {
     const grayImageData = toGray(imageData);
     const { width, height, data } = grayImageData;
-    // let threshold = otsu(data);
-    // 大津处理背景与前景颜色相近的图片时，效果不好，这里回退到均值哈希来求阈值
-    // if (Math.pow(threshold - data[0], 2) < 4) {
-    //     threshold = average(data);
-    // }
-    const threshold = average(data);
+    const threshold = otsu(data);
     const value = data[0] > threshold ? [0, 1] : [1, 0];
     const hash = new Uint8Array(width * height);
     for (let i = 0; i < width; i++) {
@@ -312,12 +307,10 @@ function resizeCanvas(inputCanvas: HTMLCanvasElement, size: number) {
     const outputCavans = createCavans(size, size);
     const outputCtx = <CanvasRenderingContext2D>outputCavans.getContext('2d');
     outputCtx.drawImage(inputCanvas, 0, 0, inputCanvas.width, inputCanvas.height, 0, 0, size, size);
-    // console.log(outputCavans.toDataURL());
     return outputCtx.getImageData(0, 0, size, size);
 }
 
-async function createImageFingerprints(url: string, log: boolean) {
-    const image = await loadImage(url);
+async function createImageFingerprints(image: HTMLImageElement, log: boolean) {
     const contents = splitImage(image);
     return contents.map(({ canvas, ...args }) => {
         if (log) {
@@ -331,9 +324,9 @@ async function createImageFingerprints(url: string, log: boolean) {
         };
     });
 }
-const WORDS = 'abcdefghijklmnopqrstuvwxyz0123456789.-!?';
 
 function createSymbols(fingerprints: Array<any>) {
+    const WORDS = 'abcdefghijklmnopqrstuvwxyz0123456789.-!?';
     return fingerprints.map((it, index) => {
         return {
             name: WORDS[index],
@@ -351,34 +344,51 @@ function hammingDistance (hash1: Uint8Array, hash2: Uint8Array) {
     return count;
 };
 
-function mapToSymbol(fingerprints: Array<any>, symbols: Array<any>) {
-    return fingerprints.map(({ hash }) => {
+function mapSymbols(fingerprints: Array<any>, symbols: Array<any>) {
+    return fingerprints.map(({ hash, ...position }) => {
         const isEmpty = hash.every((v: number) => v === hash[0]);
         if (isEmpty) {
             return ' ';
         }
         let diff = Number.MAX_SAFE_INTEGER;
-        let target = '-';
-        let sum = 0;
+        let word = '*';
         symbols.forEach(symbol => {
             const distance = hammingDistance(hash, symbol.value);
-            // console.log(distance);
-            sum += distance;
             // 汉明距离大于标识相似度偏差较大排除
             if (distance < diff) {
                 diff = distance;
-                target = symbol.name;
+                word = symbol.name;
             }
         });
-        console.log('avg', sum / symbols.length);
-        return target;
+        return {
+            ...position,
+            word,
+        };
     });
 }
 
+function printfSymbols(results: Array<any>, width: number, height: number): string {
+    const canvas = createCavans(width, height);
+    const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
+    const head = results[0];
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#000';
+    ctx.font = `${Math.floor(head.width)}px -apple-system, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    results.forEach(item => {
+        ctx.fillText(item.word, item.x + Math.round(item.width / 2), item.y + Math.round(item.height / 2), item.width);
+    });
+    return canvas.toDataURL();
+}
+
 export async function readMetaInfo(imageUrl: string, mapUrl: string) {
-    const mapFingerprints = await createImageFingerprints(mapUrl, false);
-    const symbols = createSymbols(mapFingerprints);
-    const imageFingerprints = await createImageFingerprints(imageUrl, true);
-    const words = mapToSymbol(imageFingerprints, symbols);
-    console.log(words);
+    const mapImage = await loadImage(mapUrl);
+    const mapImageFingerprints = await createImageFingerprints(mapImage, false);
+    const symbols = createSymbols(mapImageFingerprints);
+    const readImage = await loadImage(imageUrl);
+    const readImageFingerprints = await createImageFingerprints(readImage, false);
+    const results = mapSymbols(readImageFingerprints, symbols);
+    console.log(results);
+    return printfSymbols(results, readImage.naturalWidth, readImage.naturalHeight);
 }

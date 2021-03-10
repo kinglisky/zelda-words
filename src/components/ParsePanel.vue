@@ -4,7 +4,17 @@
         class="parse-panel"
     >
         <span class="parse-panel__close" @click="close">×</span>
-        <textarea class="parse-panel__message" v-model="message"></textarea>
+        <img
+            class="parse-panel__result"
+            v-if="resultImage"
+            :src="resultImage"
+        >
+        <span
+            v-else
+            class="parse-panel__message"
+        >
+            图片解析中......
+        </span>
     </section>
 </template>
 
@@ -25,23 +35,17 @@ export default defineComponent({
 
     setup: (props, context) => {
         const container = ref(null);
-        const loading = ref(false);
-        const metaInfo = ref('');
-        const message = computed(() => {
-            return loading.value ? '图片解析中......' : metaInfo.value;
-        });
+        const resultImage = ref('');
 
         const close = () => context.emit('close');
 
         const parseImage = async () => {
-            loading.value = true;
             try {
-                metaInfo.value = await readMetaInfo(props.url, wordMapImageUrl);
+                resultImage.value = await readMetaInfo(props.url, wordMapImageUrl);
             } catch (error) {
                 console.log(error);
-                metaInfo.value = error.message || '图片信息解析出错！';
+                resultImage.value = '';
             }
-            loading.value = false;
         }
 
         const closePanel = (event: Event) => {
@@ -61,7 +65,7 @@ export default defineComponent({
 
         return {
             container,
-            message,
+            resultImage,
             close,
         };
     },
@@ -73,13 +77,13 @@ export default defineComponent({
     position: fixed;
     top: 50%;
     left: 50%;
-    max-width: 600px;
+    overflow: hidden;
     width: 80%;
+    max-width: 600px;
     height: 50%;
     background: #fff;
     border-radius: 4px;
     transform: translate(-50%, -50%);
-    overflow: hidden;
 
     &__close {
         position: absolute;
@@ -95,18 +99,20 @@ export default defineComponent({
         cursor: pointer;
     }
 
-    &__message {
+    &__result {
         display: block;
         width: 100%;
         height: 100%;
-        padding: 32px;
-        color: #000;
-        font-size: 18px;
-        font-weight: bold;
-        line-height: 2;
-        border: none;
-        outline: none;
-        resize: none;
+
+        object-fit: contain;
+    }
+
+    &__message {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
     }
 }
 </style>
