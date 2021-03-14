@@ -28,3 +28,10 @@ github.io 如果打不开戳这里：http://nlush.com/zelda-words/
 
 https://www.cnblogs.com/polly333/p/7238197.html
 https://blog.csdn.net/Print_lin/article/details/80143002?spm=1001.2014.3001.5501
+
+
+优化了下之前做的塞尔达席卡文转换器，实现了一个简单版本的席卡文 OCR 识别，耶~
+
+工具地址在这：http://nlush.com/zelda-words
+
+仓库地址在这：https://github.com/kinglisky/zelda-words
