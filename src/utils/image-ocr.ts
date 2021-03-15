@@ -229,6 +229,7 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
     unitizeCtx.putImageData(imageData, 0, 0);
 
     if (log) {
+        console.log(JSON.stringify(countPixel(imageData, true)));
         console.log(unitizeCanvas.toDataURL());
     }
 
@@ -398,7 +399,7 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const readImage = await loadImage(imageUrl);
     const readImageFingerprints = await createImageFingerprints(
         readImage,
-        false
+        true
     );
     const results = mapSymbols(readImageFingerprints, symbols);
     console.log(results);
