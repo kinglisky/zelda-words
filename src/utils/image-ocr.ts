@@ -228,11 +228,6 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
-    if (log) {
-        console.log(JSON.stringify(countPixel(imageData, true)));
-        console.log(unitizeCanvas.toDataURL());
-    }
-
     // 逐行扫描
     const rowsRanges = countRanges(countPixel(imageData, true));
     // 逐列扫描
@@ -267,6 +262,9 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
                 row.size
             );
             itemCtx.putImageData(itemImageData, 0, 0);
+            if (log) {
+                console.log(itemCanvas.toDataURL());
+            }
             res.push({
                 x: item.offset,
                 y: row.offset,
@@ -314,9 +312,6 @@ function resizeCanvas(inputCanvas: HTMLCanvasElement, size: number) {
 async function createImageFingerprints(image: HTMLImageElement, log: boolean) {
     const contents = splitImage(image, log);
     return contents.map(({ canvas, ...args }) => {
-        // if (log) {
-        //     console.log(canvas.toDataURL());
-        // }
         const imageData = resizeCanvas(canvas, 16);
         const hash = binaryzationOutput(imageData);
         return {
@@ -399,7 +394,7 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const readImage = await loadImage(imageUrl);
     const readImageFingerprints = await createImageFingerprints(
         readImage,
-        true
+        false
     );
     const results = mapSymbols(readImageFingerprints, symbols);
     console.log(results);
