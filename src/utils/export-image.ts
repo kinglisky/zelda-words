@@ -37,14 +37,14 @@ export default async function exportImage(node: HTMLBaseElement | null, options:
         return Promise.resolve('');
     }
 
-    const dataUrl = await domtoimage.toJpeg(node, {
+    const dataUrl = await domtoimage.toPng(node, {
         filter: (n: any) => fixSvgIconNode(n),
         quality: 1
     });
 
     if (!IS_MOBILE) {
         const link = document.createElement('a');
-        link.download = `zelda-words-${Date.now()}.jpeg`;
+        link.download = `zelda-words-${Date.now()}.png`;
         link.href = dataUrl;
         link.click();
         return '';

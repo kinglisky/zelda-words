@@ -15,6 +15,15 @@ function toGray(data: ImageData) {
     return res;
 }
 
+const average = (imgData: ImageData) => {
+    const grayData = toGray(imgData);
+    let sum = 0;
+    for (let i = 0; i < grayData.length; i += 1) {
+        sum += data[i];
+    }
+    return sum / grayData.length;
+};
+
 function otsu(imgData: ImageData) {
     const grayData = toGray(imgData);
     let ptr = 0;
@@ -63,19 +72,21 @@ function otsu(imgData: ImageData) {
 function unitizeImageData(imageData: ImageData) {
     const { width, height, data } = imageData;
     const threshold = otsu(imageData);
-    const colors = data[0] > threshold ? [0, 255] : [255, 0];
+    const head = (data[0] + data[1] + data[2]) / 3 | 0;
+    const colors = head > threshold ? [0, 255] : [255, 0];
+    const output = new ImageData(width, height);
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
             const index = (j * width + i) * 4;
-            const avg = (data[index] + data[index + 1] + data[index + 2]) / 3;
+            const avg = (data[index] + data[index + 1] + data[index + 2]) / 3 | 0;
             const v = avg > threshold ? colors[0] : colors[1];
-            data[index] = v;
-            data[index + 1] = v;
-            data[index + 2] = v;
-            data[index + 3] = 255;
+            output.data[index] = v;
+            output.data[index + 1] = v;
+            output.data[index + 2] = v;
+            output.data[index + 3] = 255;
         }
     }
-    return imageData;
+    return output;
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -223,7 +234,7 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
     const canvas = createCavans(width, height);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     ctx.drawImage(image, 0, 0);
-    const imageData = unitizeImageData(ctx.getImageData(0, 0, width, height));
+    const imageData = unitizeImageData(ctx.getImageData(0, 0, width, height), log);
     const unitizeCanvas = createCavans(width, height);
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
@@ -262,9 +273,6 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
                 row.size
             );
             itemCtx.putImageData(itemImageData, 0, 0);
-            if (log) {
-                console.log(itemCanvas.toDataURL());
-            }
             res.push({
                 x: item.offset,
                 y: row.offset,
@@ -394,13 +402,17 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
     const readImage = await loadImage(imageUrl);
     const readImageFingerprints = await createImageFingerprints(
         readImage,
-        false
+        true,
     );
     const results = mapSymbols(readImageFingerprints, symbols);
     console.log(results);
-    return printfSymbols(
-        results,
-        readImage.naturalWidth,
-        readImage.naturalHeight
-    );
+    if (results.length) {
+        return printfSymbols(
+            results,
+            readImage.naturalWidth,
+            readImage.naturalHeight
+        );
+    }
+    window.alert('无法解析');
+    throw new Error('PARSE ERROR');
 }
