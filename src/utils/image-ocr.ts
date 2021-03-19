@@ -15,15 +15,6 @@ function toGray(data: ImageData) {
     return res;
 }
 
-const average = (imgData: ImageData) => {
-    const grayData = toGray(imgData);
-    let sum = 0;
-    for (let i = 0; i < grayData.length; i += 1) {
-        sum += data[i];
-    }
-    return sum / grayData.length;
-};
-
 function otsu(imgData: ImageData) {
     const grayData = toGray(imgData);
     let ptr = 0;
@@ -234,7 +225,7 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
     const canvas = createCavans(width, height);
     const ctx = <CanvasRenderingContext2D>canvas.getContext('2d');
     ctx.drawImage(image, 0, 0);
-    const imageData = unitizeImageData(ctx.getImageData(0, 0, width, height), log);
+    const imageData = unitizeImageData(ctx.getImageData(0, 0, width, height));
     const unitizeCanvas = createCavans(width, height);
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
