@@ -279,7 +279,8 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
 function binaryzationOutput(imageData: ImageData) {
     const { width, height, data } = imageData;
     const threshold = otsu(imageData);
-    const value = data[0] > threshold ? [0, 1] : [1, 0];
+    const head = (data[0] + data[1] + data[2]) / 3 | 0;
+    const value = head > threshold ? [0, 1] : [1, 0];
     const hash = new Uint8Array(width * height);
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
