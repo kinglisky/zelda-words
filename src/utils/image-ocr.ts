@@ -230,10 +230,18 @@ function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
     const unitizeCtx = <CanvasRenderingContext2D>unitizeCanvas.getContext('2d');
     unitizeCtx.putImageData(imageData, 0, 0);
 
+    const rowsPixels = countPixel(imageData, true);
+    const colsPixels = countPixel(imageData, false);
+
+    if (log) {
+        console.log('rowsPixels:', JSON.stringify(rowsPixels));
+        console.log('colsPixels:', JSON.stringify(colsPixels));
+    }
+
     // 逐行扫描
-    const rowsRanges = countRanges(countPixel(imageData, true));
+    const rowsRanges = countRanges(rowsPixels);
     // 逐列扫描
-    const colsRanges = countRanges(countPixel(imageData, false));
+    const colsRanges = countRanges(colsPixels);
 
     // 计算横纵像素分布得出字体内容的大小（字体正方形区域）
     const fontRange = Math.max(
