@@ -1,5 +1,25 @@
 (async function () {
-    const drawToCanvas = (canvas, image) => {
+    // canvas drawImage 有跨域限制，先加载图片转 blob url 使用
+    const loadImage = (url) => {
+        return fetch(url)
+            .then(res => res.blob())
+            .then(blob => URL.createObjectURL(blob))
+            .then(blobUrl => {
+
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = (e) => reject(e);
+                    img.src = blobUrl;
+                });
+            });
+    };
+
+    const drawToCanvas = (image) => {
+        const { naturalWidth: width, naturalHeight: height } = image;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(image, 0, 0);
         return canvas;
@@ -17,14 +37,9 @@
                 const g = data.data[idx + 1];
                 const b = data.data[idx + 2];
                 const gray = calculateGray(r, g, b);
-                data.data[idx + 0] = gray;
-                data.data[idx + 1] = gray;
-                data.data[idx + 2] = gray;
-                data.data[idx + 3] = 255;
                 grayData.push(gray);
             }
         }
-        ctx.putImageData(data, 0, 0);
         return grayData;
     };
 
@@ -89,17 +104,16 @@
         return threshold;
     };
 
-    const canvasToBinaryzation = (canvas, threshold) => {
-        const ctx = canvas.getContext('2d');
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const binaryzationOutput = (originCanvas, threshold) => {
+        const ctx = originCanvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, originCanvas.width, originCanvas.height);
         const { width, height, data } = imageData;
         // 第一像素的值即为背景色值
-        const head = data[0];
+        const head = (data[0] + data[1] + data[2]) / 3 | 0;
         // 如果背景颜色大于阈值，则背景与文字的颜色的值则需要调换
         const color = head > threshold
             ? { foreground: 0, background: 255}
             : { foreground: 255, background: 0 };
-        const bits = [];
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 const idx = (x + y * width) * 4;
@@ -109,21 +123,40 @@
                 data[idx + 1] = v;
                 data[idx + 2] = v;
                 data[idx + 3] = 255;
-                bits.push(v > 0 ? 1 : 0);
             }
         }
         ctx.putImageData(imageData, 0, 0);
-        return bits;
+        return originCanvas.toDataURL();
     }
 
-    const image = document.querySelector('.input-image');
-    const grayCanvas = document.querySelector('.output-gray');
-    const binaryzationCanvas = document.querySelector('.output-binaryzation');
-    drawToCanvas(grayCanvas, image);
-    const grayData = canvasToGray(grayCanvas);
-    const threshold = average(grayData);
-    // const threshold = otsu(grayData);
-    drawToCanvas(binaryzationCanvas, grayCanvas);
-    const bits = canvasToBinaryzation(binaryzationCanvas, threshold);
-    console.log(bits);
+    const binaryzationHash = (originCanvas, threshold) => {
+        const ctx = originCanvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, originCanvas.width, originCanvas.height);
+        const { width, height, data } = imageData;
+        // 第一像素的值即为背景色值
+        const head = (data[0] + data[1] + data[2]) / 3 | 0;
+        // 如果背景颜色大于阈值，则背景与文字的颜色的值则需要调换
+        const color = head > threshold
+            ? { foreground: 0, background: 255}
+            : { foreground: 255, background: 0 };
+        const hash = [];
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                const idx = (x + y * width) * 4;
+                const avg = (data[idx] + data[idx + 1] + data[idx + 2]) / 3 | 0;
+                const v = avg > threshold ? color.foreground : color.background;
+                hash.push(v ? 1 : 0);
+            }
+        }
+        return hash;
+    }
+
+    const url = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-2.jpeg';
+    const image = await loadImage(url);
+    const canvas = drawToCanvas(image);
+    const grayData = canvasToGray(canvas);
+    // const threshold = average(grayData);
+    const threshold = otsu(grayData);
+    const result = binaryzationOutput(canvas, threshold);
+    console.log(result);
 })();
