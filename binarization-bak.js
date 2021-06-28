@@ -151,12 +151,12 @@
         return hash;
     }
 
-    const url = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-2.jpeg';
+    const url = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/page.png';
     const image = await loadImage(url);
     const canvas = drawToCanvas(image);
     const grayData = canvasToGray(canvas);
     // const threshold = average(grayData);
     const threshold = otsu(grayData);
     const result = binaryzationOutput(canvas, threshold);
-    console.log(result);
+    console.log('res', result);
 })();
