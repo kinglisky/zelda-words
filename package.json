@@ -8,11 +8,13 @@
   },
   "dependencies": {
     "@nuintun/qrcode": "^3.0.1",
+    "@tensorflow/tfjs": "^3.9.0",
     "vue": "^3.0.5",
     "yargs": "^17.1.1"
   },
   "devDependencies": {
     "@types/dom-to-image": "^2.6.2",
+    "@types/node": "^16.9.3",
     "@vitejs/plugin-vue": "^1.1.4",
     "@vue/compiler-sfc": "^3.0.5",
     "@vuedx/typecheck": "^0.6.0",

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const util = require('util');
+const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 const cheerio = require('cheerio');
@@ -12,7 +13,8 @@ const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
-const WORDS_INDEXS = Array.from({ length: WORDS.length }).map((_, i) => i);
+// const WORDS_INDEXS = Array.from({ length: WORDS.length }).map((_, i) => i);
+const WORDS_INDEXS = [0];
 const IMAGE_WIDTH = Number(argv.size || 28);
 const IMAGE_HEIGHT = Number(argv.size || 28);
 const COUNT = Number(argv.count || 1);
@@ -37,12 +39,12 @@ function fillSvg(svg, color) {
 }
 
 async function loadSvg(word) {
-    const path = `./${word.path}`;
-    const data = await readFile(path, 'utf8');
+    const svgPath = path.join(__dirname, '../src/assets', word.path);
+    const data = await readFile(svgPath, 'utf8');
     const svgContent = fillSvg(data, {
-        r: randomValue(255),
-        g: randomValue(255),
-        b: randomValue(255),
+        r: 255,
+        g: 255,
+        b: 255,
     });
     return Buffer.from(svgContent);
 }
@@ -61,6 +63,7 @@ async function createWordImage(word) {
                 alpha: 0,
             },
         })
+        .trim()
         .png().toBuffer();
     const wordImageBuffer = await sharp(rotateImageBuffer)
         .resize(IMAGE_WIDTH, IMAGE_HEIGHT)
@@ -72,10 +75,10 @@ async function createWordImage(word) {
             height: IMAGE_HEIGHT,
             channels: 4,
             background: {
-                r: randomValue(255),
-                g: randomValue(255),
-                b: randomValue(255),
-                alpha: 255,
+                r: 0,
+                g: 0,
+                b: 0,
+                alpha: 0,
             },
         }
     }).png().toBuffer();
@@ -91,12 +94,11 @@ async function createWordImage(word) {
     let data = null;
     const indexs = [];
     for (let i = 0; i < COUNT; i++) {
-        console.log('create images --------------------------------------> ', i);
+        console.log('batch create images --------------------------------------> ', i);
         // 打乱字符顺序
         tf.util.shuffle(WORDS_INDEXS);
         const createWords = WORDS_INDEXS.map(async (index) => {
             const word = WORDS[index];
-            console.log(`create: index: ${index} -> word: ${word.symbol}`);
             const buffer = await createWordImage(word);
             return {
                 index,
@@ -105,18 +107,22 @@ async function createWordImage(word) {
         });
         const res = await Promise.all(createWords);
         res.forEach(({ index, buffer }) => {
+            // for (let i = 0; i < buffer.length; i += 4) {
+            //     console.log([0, 1, 2, 3].map(idx => buffer[i + idx]));
+            // }
             indexs.push(index);
             data = data ? Buffer.concat([data, buffer]) : buffer;
         });
+        const meta = {
+            indexs,
+            count: (i + 1) * WORDS_INDEXS.length,
+            width: IMAGE_WIDTH,
+            height: IMAGE_HEIGHT,
+            buffer: `${NAME}.buffer`,
+        };
+        await writeFile(path.join(__dirname, `../src/cnn/dataset/${NAME}.buffer`), data);
+        await writeFile(path.join(__dirname, `../src/cnn/dataset/${NAME}.json`), JSON.stringify(meta));
+        console.log(`batch save images --------------------------------------> ${i}, count ${meta.count}`);
     }
-    const res = {
-        indexs,
-        count: COUNT * WORDS.length,
-        width: IMAGE_WIDTH,
-        height: IMAGE_HEIGHT,
-        data: `./dataset/${NAME}.buffer`,
-    };
-    await writeFile(`./dataset/${NAME}.buffer`, data);
-    await writeFile(`./dataset/${NAME}.json`, JSON.stringify(res));
-    console.log(res);
+    console.log('done!');
 })();

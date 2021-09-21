@@ -1,12 +1,9 @@
 const util = require('util');
 const fs = require('fs');
 const sharp = require('sharp');
-const cheerio = require('cheerio');
-const Color = require('color');
 const shell = require('shelljs');
 const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
-const data = require('./data.json');
+const data = require('./dataset/test.json');
 
 (async function main() {
     const {
@@ -31,7 +28,7 @@ const data = require('./data.json');
         const end = start + chunkSize;
         const data = buffer.slice(start , end);
         const targetIndex = indexs[i];
-        const fileName = `${targetIndex}-${Date.now()}.png`;
+        const fileName = `${targetIndex}.png`;
         await sharp(data, options).png().toFile(fileName);
         await shell.exec(`open ${fileName}`);
         i+=1;
