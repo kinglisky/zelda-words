@@ -13,8 +13,7 @@ const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
-// const WORDS_INDEXS = Array.from({ length: WORDS.length }).map((_, i) => i);
-const WORDS_INDEXS = [0];
+const WORDS_INDEXS = Array.from({ length: WORDS.length }).map((_, i) => i);
 const IMAGE_WIDTH = Number(argv.size || 28);
 const IMAGE_HEIGHT = Number(argv.size || 28);
 const COUNT = Number(argv.count || 1);
@@ -51,18 +50,18 @@ async function loadSvg(word) {
 
 async function createWordImage(word) {
     const size = randomValue(200, 24);
-    const rotate = randomValue(360);
+    // const rotate = randomValue(360);
     const svg = await loadSvg(word);
     const rotateImageBuffer = await sharp(svg)
         .resize(size, size)
-        .rotate(rotate, {
-            background: {
-                r: 0,
-                g: 0,
-                b: 0,
-                alpha: 0,
-            },
-        })
+        // .rotate(rotate, {
+        //     background: {
+        //         r: 0,
+        //         g: 0,
+        //         b: 0,
+        //         alpha: 0,
+        //     },
+        // })
         .trim()
         .png().toBuffer();
     const wordImageBuffer = await sharp(rotateImageBuffer)
@@ -86,7 +85,7 @@ async function createWordImage(word) {
         input: wordImageBuffer,
         top: 0,
         left: 0,
-    }]).raw().toBuffer();
+    }]).sharpen().raw().toBuffer();
     return image;
 }
 
@@ -107,11 +106,17 @@ async function createWordImage(word) {
         });
         const res = await Promise.all(createWords);
         res.forEach(({ index, buffer }) => {
-            // for (let i = 0; i < buffer.length; i += 4) {
-            //     console.log([0, 1, 2, 3].map(idx => buffer[i + idx]));
-            // }
+            const pixs = [];
+            for (let i = 0; i < buffer.length; i += 4) {
+                const a = buffer[i + 3] / 255;
+                const r = buffer[i] * a;
+                const g = buffer[i + 1] * a;
+                const b = buffer[i + 2] * a;
+                pixs.push(Math.floor(r * 0.299 + g * 0.587 + b * 0.114));
+            }
             indexs.push(index);
-            data = data ? Buffer.concat([data, buffer]) : buffer;
+            const pixsBuffer = Buffer.from(pixs);
+            data = data ? Buffer.concat([data, pixsBuffer]) : pixsBuffer;
         });
         const meta = {
             indexs,
@@ -120,8 +125,8 @@ async function createWordImage(word) {
             height: IMAGE_HEIGHT,
             buffer: `${NAME}.buffer`,
         };
-        await writeFile(path.join(__dirname, `../src/cnn/dataset/${NAME}.buffer`), data);
-        await writeFile(path.join(__dirname, `../src/cnn/dataset/${NAME}.json`), JSON.stringify(meta));
+        await writeFile(path.join(__dirname, `../src/cnn/${NAME}.buffer`), data);
+        await writeFile(path.join(__dirname, `../src/cnn/${NAME}.json`), JSON.stringify(meta));
         console.log(`batch save images --------------------------------------> ${i}, count ${meta.count}`);
     }
     console.log('done!');

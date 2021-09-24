@@ -1,5 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import { dataset, IMAGE_H, IMAGE_W, WORDS_COUNT } from './data.js';
+import modelURL from './model.json?url';
+
 
 const BATCH_SIZE = 400;
 
@@ -16,7 +18,7 @@ function createModel() {
     // of 5 pixels each. It uses a simple RELU activation function which pretty
     // much just looks like this: __/
     model.add(tf.layers.conv2d({
-        inputShape: [IMAGE_H, IMAGE_W, 4],
+        inputShape: [IMAGE_H, IMAGE_W, 1],
         kernelSize: 3,
         filters: 16,
         activation: 'relu'
@@ -87,7 +89,7 @@ async function train({ model, data, onIteration }) {
     const validationSplit = 0.15;
 
     // Get number of training epochs from the UI.
-    const trainEpochs = 200;
+    const trainEpochs = 100;
 
     // We'll keep a buffer of loss and accuracy values over time.
     let trainBatchCount = 0;
@@ -136,9 +138,12 @@ async function train({ model, data, onIteration }) {
     const finalValAccPercent = valAcc * 100;
     console.log(`检验集准确率: ${finalValAccPercent.toFixed(1)}%`);
     console.log(`测试集准确率: ${testAccPercent.toFixed(1)}%`);
+
+    const saveResults = await model.save('downloads://zelda-words-model');
+    console.log('保存模型', saveResults);
 }
 
-(async function main() {
+async function run() {
     await dataset.loadData();
     const model = createModel();
     train({
@@ -149,4 +154,21 @@ async function train({ model, data, onIteration }) {
             showPredictions(model, dataset);
         },
     });
-})();
+};
+
+async function predict() {
+    const model = await tf.loadLayersModel(modelURL);
+    await dataset.loadData();
+    const examples = dataset.getTestData(40);
+    const output = model.predict(examples.images);
+    const axis = 1;
+    const labels = Array.from(examples.labels.argMax(axis).dataSync());
+    const predictions = Array.from(output.argMax(axis).dataSync());
+    const res = predictions.filter((it, index) => it === labels[index]);
+    console.log('Show Predictions', res.length, res);
+}
+
+window.addEventListener('load', () => {
+    document.querySelector('.run').addEventListener('click', run, false);
+    document.querySelector('.predict').addEventListener('click', predict, false);
+});

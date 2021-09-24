@@ -1,25 +1,26 @@
 const util = require('util');
+const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 const shell = require('shelljs');
 const readFile = util.promisify(fs.readFile);
-const data = require('./dataset/test.json');
+const data = require('../src/cnn/test.json');
 
 (async function main() {
     const {
         count,
         width,
         height,
-        data: path,
+        buffer: bufferName,
         indexs,
     } = data;
-    const buffer = await readFile(path);
-    const chunkSize = width * height * 4;
+    const buffer = await readFile(path.join(__dirname, '../src/cnn', bufferName));
+    const chunkSize = width * height;
     const options = {
         raw: {
             width,
             height,
-            channels: 4
+            channels: 1
         }
     };
     let i = 0;

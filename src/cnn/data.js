@@ -1,8 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
-import TRAIN from './dataset/train.json';
-import TEST from './dataset/test.json';
-import trainBufferURL from './dataset/train.buffer?url';
-import testBufferURL from './dataset/test.buffer?url';
+import TRAIN from './train.json';
+import TEST from './test.json';
+import trainBufferURL from './train.buffer?url';
+import testBufferURL from './test.buffer?url';
 
 TRAIN.data = trainBufferURL;
 TEST.data = testBufferURL;
@@ -49,7 +49,7 @@ class Dataset {
 
     getData(key) {
         const target = this.dataset[key];
-        const imagesShape = [target.count, target.height, target.height, 4];
+        const imagesShape = [target.count, target.height, target.height, 1];
         return {
             images: tf.tensor4d(target.images, imagesShape),
             labels: tf.oneHot(tf.tensor1d(target.labels, 'int32'), WORDS_COUNT).toFloat(),
@@ -64,7 +64,7 @@ class Dataset {
         const res = this.getData('test');
         if (numExamples) {
             return {
-                images: res.images.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 4]),
+                images: res.images.slice([0, 0, 0, 0], [numExamples, IMAGE_H, IMAGE_W, 1]),
                 labels: res.labels.slice([0, 0], [numExamples, WORDS_COUNT]),
             };
         }
