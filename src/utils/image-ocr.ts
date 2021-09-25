@@ -1,3 +1,7 @@
+import * as tf from '@tensorflow/tfjs';
+import modelURL from '../data/model.json?url';
+import words from '../data/words.json';
+
 function toGray(data: ImageData) {
     const calculateGray = (r: number, g: number, b: number) =>
         Math.floor(r * 0.299 + g * 0.587 + b * 0.114);
@@ -83,6 +87,7 @@ function unitizeImageData(imageData: ImageData) {
 function loadImage(url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const img = new Image();
+        img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
         img.onerror = (e) => reject(e);
         img.src = url;
@@ -218,6 +223,7 @@ type Chunk = {
     width: number;
     height: number;
     canvas: HTMLCanvasElement;
+    data?: Float32Array,
 };
 
 function splitImage(image: HTMLImageElement, log: boolean): Array<Chunk> {
@@ -405,7 +411,59 @@ export async function readMetaInfo(imageUrl: string, mapUrl: string) {
         true,
     );
     const results = mapSymbols(readImageFingerprints, symbols);
-    console.log(results);
+    if (results.length) {
+        return printfSymbols(
+            results,
+            readImage.naturalWidth,
+            readImage.naturalHeight
+        );
+    }
+    window.alert('无法解析');
+    throw new Error('PARSE ERROR');
+}
+
+
+function convertToPredictData(images: Chunk[], imageSize: number) {
+    images.forEach(it => {
+        const imageData = resizeCanvas(it.canvas, imageSize);
+        const pixs = new Float32Array(imageData.data.length / 4);
+        let index = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            const r = imageData.data[i];
+            const g = imageData.data[i + 1];
+            const b = imageData.data[i + 2];
+            pixs[index] = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+            index += 1;
+        }
+        it.data = pixs;
+    });
+    const shape = [images.length, imageSize, imageSize, 1];
+    const shapeSize = tf.util.sizeFromShape(shape);
+    const concatData = new Float32Array(shapeSize);
+    images.forEach((image, index) => {
+        concatData.set(image.data as Float32Array, index * imageSize * imageSize);
+    });
+    return tf.tensor4d(concatData, shape);
+}
+
+export async function readMetaInfoByCnn(imageUrl: string) {
+    const imageSize = 28;
+    const readImage = await loadImage(imageUrl);
+    const images = splitImage(readImage, false);
+    const predictData = convertToPredictData(images, imageSize);
+    const model = await tf.loadLayersModel(modelURL);
+    const output = model.predict(predictData);
+    const axis = 1;
+    const predictIndexs: number[] = Array.from(output.argMax(axis).dataSync());
+    const results = predictIndexs.map((predictIndex, index) => {
+        const target = words[predictIndex];
+        return {
+            ...images[index],
+            word: target.symbol,
+        };
+
+    });
+    console.log('results', results);
     if (results.length) {
         return printfSymbols(
             results,

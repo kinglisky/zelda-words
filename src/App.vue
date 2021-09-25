@@ -23,12 +23,12 @@
 
             <div class="header__group">
                 <label class="header__item" for="vertical-radio">
-                    <span>Vertical：</span>
+                    <span>Vertical:</span>
                     <input type="checkbox" v-model="vertical" />
                 </label>
 
                 <label class="header__item" for="font-size-input">
-                    <span>Size：</span>
+                    <span>Size:</span>
                     <input
                         type="number"
                         id="font-size-input"
@@ -38,6 +38,13 @@
                         v-model="size"
                         @blur="resetSize"
                     />
+                </label>
+            </div>
+
+            <div class="header__group">
+                <label class="header__item" for="use-convnet">
+                    <span>Use Convnet:</span>
+                    <input id="use-convnet" type="checkbox" v-model="useConvnet">
                 </label>
             </div>
 
@@ -80,6 +87,7 @@
         <ParsePanel
             v-if="showParsePanel"
             :url="parseImageUrl"
+            :use-convnet="useConvnet"
             @close="showParsePanel = false"
         />
         <Download
@@ -95,7 +103,6 @@ import { computed, defineComponent, ref } from 'vue';
 import WordsPanel from './components/WordsPanel.vue';
 import ParsePanel from './components/ParsePanel.vue';
 import Download from './components/Download.vue';
-import './utils/image-ocr';
 
 export default defineComponent({
     name: 'App',
@@ -150,6 +157,8 @@ export default defineComponent({
             target.value = '';
         };
 
+        const useConvnet = ref(true);
+
         return {
             size,
             limitSize,
@@ -160,6 +169,7 @@ export default defineComponent({
             words,
             loading,
             wordsPanel,
+            useConvnet,
             downloadImage,
             uploadImage,
             parseImageUrl,
@@ -225,6 +235,10 @@ body {
         color: #fff;
         border-top: 1px solid #fff;
         border-right: 1px solid #fff;
+
+        span {
+            margin-right: 8px;
+        }
     }
 
     &__color {

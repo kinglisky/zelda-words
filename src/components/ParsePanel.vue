@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
-import { readMetaInfo } from '../utils/image-ocr';
+import { readMetaInfo, readMetaInfoByCnn } from '../utils/image-ocr';
 import wordMapImageUrl from '../assets/map.png';
 
 export default defineComponent({
@@ -30,6 +30,11 @@ export default defineComponent({
         url: {
             type: String,
             default: '',
+        },
+
+        useConvnet: {
+            type: Boolean,
+            default: false,
         },
     },
 
@@ -41,7 +46,9 @@ export default defineComponent({
 
         const parseImage = async () => {
             try {
-                resultImage.value = await readMetaInfo(props.url, wordMapImageUrl);
+                resultImage.value = props.useConvnet
+                    ? await readMetaInfoByCnn(props.url)
+                    : await readMetaInfo(props.url, wordMapImageUrl);
             } catch (error) {
                 console.log(error);
                 resultImage.value = '';
@@ -56,6 +63,7 @@ export default defineComponent({
 
         onMounted(() => {
             document.body.addEventListener('click', closePanel, false);
+            console.log('使用卷积神经网络进行识别：', props.useConvnet);
             parseImage();
         });
 

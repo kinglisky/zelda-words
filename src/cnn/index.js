@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import { dataset, IMAGE_H, IMAGE_W, WORDS_COUNT } from './data.js';
+import { dataset, IMAGE_H, IMAGE_W, WORDS_COUNT } from './data';
 import modelURL from './model.json?url';
 
 

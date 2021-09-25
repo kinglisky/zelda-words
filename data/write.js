@@ -8,7 +8,7 @@ const Color = require('color');
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 const tf = require('@tensorflow/tfjs');
-const WORDS = require('./words.json');
+const WORDS = require('../src/data/words.json');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
@@ -125,8 +125,8 @@ async function createWordImage(word) {
             height: IMAGE_HEIGHT,
             buffer: `${NAME}.buffer`,
         };
-        await writeFile(path.join(__dirname, `../src/cnn/${NAME}.buffer`), data);
-        await writeFile(path.join(__dirname, `../src/cnn/${NAME}.json`), JSON.stringify(meta));
+        await writeFile(path.join(__dirname, `../src/data/${NAME}.buffer`), data);
+        await writeFile(path.join(__dirname, `../src/data/${NAME}.json`), JSON.stringify(meta));
         console.log(`batch save images --------------------------------------> ${i}, count ${meta.count}`);
     }
     console.log('done!');
