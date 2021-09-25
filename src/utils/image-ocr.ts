@@ -1,5 +1,4 @@
 import * as tf from '@tensorflow/tfjs';
-import modelURL from '../data/model.json?url';
 import words from '../data/words.json';
 
 function toGray(data: ImageData) {
@@ -437,7 +436,7 @@ function convertToPredictData(images: Chunk[], imageSize: number) {
         }
         it.data = pixs;
     });
-    const shape = [images.length, imageSize, imageSize, 1];
+    const shape: [number, number, number, number] = [images.length, imageSize, imageSize, 1];
     const shapeSize = tf.util.sizeFromShape(shape);
     const concatData = new Float32Array(shapeSize);
     images.forEach((image, index) => {
@@ -447,14 +446,15 @@ function convertToPredictData(images: Chunk[], imageSize: number) {
 }
 
 export async function readMetaInfoByCnn(imageUrl: string) {
+    const modelURL = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/model.json';
     const imageSize = 28;
     const readImage = await loadImage(imageUrl);
     const images = splitImage(readImage, false);
     const predictData = convertToPredictData(images, imageSize);
     const model = await tf.loadLayersModel(modelURL);
-    const output = model.predict(predictData);
+    const output = model.predict(predictData) as tf.Tensor;
     const axis = 1;
-    const predictIndexs: number[] = Array.from(output.argMax(axis).dataSync());
+    const predictIndexs = Array.from(output.argMax(axis).dataSync());
     const results = predictIndexs.map((predictIndex, index) => {
         const target = words[predictIndex];
         return {

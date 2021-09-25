@@ -1,8 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
 import TRAIN from '../data/train.json';
 import TEST from '../data/test.json';
-import trainBufferURL from '.../data/train.buffer?url';
-import testBufferURL from '.../data/test.buffer?url';
+import trainBufferURL from '../data/train.buffer?url';
+import testBufferURL from '../data/test.buffer?url';
 
 TRAIN.data = trainBufferURL;
 TEST.data = testBufferURL;
