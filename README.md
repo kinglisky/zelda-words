@@ -1,3 +1,6 @@
+## 卷积神经网络实现
+
+新增了卷积神经网络实现~  
 ## 希卡文
 
 ![](./ocr/ocr-0.jpg)
@@ -10,8 +13,7 @@
 > 光学字符识别（英語：Optical Character Recognition，OCR）是指对文本资料的图像文件进行分析识别处理，获取文字及版面信息的过程。
 
 工具地址在这：
-- 工具的演示地址在这：[https://kinglisky.github.io/zelda-words](https://kinglisky.github.io/zelda-words)
-- 打不开的同学戳这里：[http://nlush.com/zelda-words/](http://nlush.com/zelda-words/)
+- 工具的演示地址在这：[https://kinglisky.github.io/zelda-words](https://kinglisky.github.io/zelda-words/index.html)
 - 仓库地址：[https://github.com/kinglisky/zelda-words](https://github.com/kinglisky/zelda-words)
 
 虚构世界的文字往往是基于现实文字创造的，希卡文与英文字母数字与四个特殊符号（共 40 个字符）相对应，规则很简单，都在下图：
