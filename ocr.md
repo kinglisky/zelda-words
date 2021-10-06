@@ -1,6 +1,9 @@
+## 卷积神经网络实现
+
+新增了卷积神经网络实现~  
 ## 希卡文
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-0.jpg)
+![](./ocr/ocr-0.jpg)
 
 塞尔达玩家一定不会陌生，希卡文是游戏《塞尔达传说旷野之息》中一种虚构的文字，在希卡族的建筑上都能找到它的影子，之前实现了一个简单的[希卡文生成与翻译的工具](http://nlush.com/zelda-words)，不过关键的文字解析实现的并不优雅，使用隐藏水印的方式将一些关键信息隐藏在导出的图片中，图片压缩后隐藏信息很容易丢失，导致解析失败。有兴趣的同学不妨看看上一篇文章：[摸一个塞尔达希卡文字转换器](https://juejin.cn/post/6935836863844319239)。
 
@@ -10,18 +13,17 @@
 > 光学字符识别（英語：Optical Character Recognition，OCR）是指对文本资料的图像文件进行分析识别处理，获取文字及版面信息的过程。
 
 工具地址在这：
-- 工具的演示地址在这：[https://kinglisky.github.io/zelda-words](https://kinglisky.github.io/zelda-words)
-- 打不开的同学戳这里：[http://nlush.com/zelda-words/](http://nlush.com/zelda-words/)
+- 工具的演示地址在这：[https://kinglisky.github.io/zelda-words](https://kinglisky.github.io/zelda-words/index.html)
 - 仓库地址：[https://github.com/kinglisky/zelda-words](https://github.com/kinglisky/zelda-words)
 
 虚构世界的文字往往是基于现实文字创造的，希卡文与英文字母数字与四个特殊符号（共 40 个字符）相对应，规则很简单，都在下图：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-map.jpeg)
+![](./ocr/ocr-map.jpeg)
 
 我们导出的希卡文图片长这样：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-1.jpeg)
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-2.jpeg)
+![](./ocr/ocr-1.jpeg)
+![](./ocr/ocr-2.jpeg)
 
 开始吧~
 
@@ -34,8 +36,8 @@
 
 > 二值化（英语：Binarization）是图像分割的一种最简单的方法。二值化可以把灰度图像转换成二值图像。把大于某个临界灰度值的像素灰度设为灰度極大值，把小于这个值的像素灰度设为灰度極小值，从而实现二值化。
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-3.jpeg)
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-4.jpeg)
+![](./ocr/ocr-3.jpeg)
+![](./ocr/ocr-4.jpeg)
 
 图片二值化主要流程如下：
 - 图片灰度处理
@@ -44,7 +46,7 @@
 
 ### 图片灰度处理
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-2.jpeg)
+![](./ocr/ocr-2.jpeg)
 
 我们以上面的图片为例，图片的灰度处理比较简单，将 rgb 通道的颜色按 `r * 0.299 + g * 0.587 + b * 0.114` 的比值相加就能得到灰度值，因为灰度图片的 rgb 通道的值都是相同的，我们只取一个通道的值用于下一步计算。
 
@@ -70,7 +72,7 @@ const canvasToGray = (canvas) => {
 
 灰度处理后的图片如下：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-5.png)
+![](./ocr/ocr-5.png)
 ### 二值化阈值
 
 阈值计算是图片二值化非常关键的一步，相关的算法也很多这里，这里我们先试试一种最简单的[均值哈希（aHash）](https://baike.baidu.com/item/%E5%9D%87%E5%80%BC%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95)算法，算法很简单，求图片灰度像素的总和再除以像素点数量得出均值作为二值化的阈值。直接上代码：
@@ -182,7 +184,7 @@ const binaryzationOutput = (originCanvas, threshold) => {
 
 [完整的代码戳这](https://github.com/kinglisky/zelda-words/blob/master/binarization.js)，二值化的图片如下：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-6.png)
+![](./ocr/ocr-6.png)
 
 ## 文字切割
 
@@ -198,45 +200,45 @@ const binaryzationOutput = (originCanvas, threshold) => {
 
 直接看图容易理解一点，先来切割行，我们图片大小是 700 x 600，从上至下扫描每一行的像素，**黑色像素记为 0 白色像素记为 1**，统计每行 1 的个数，我们可以得到下面折线图：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-6.png)
+![](./ocr/ocr-6.png)
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-8.png)
+![](./ocr/ocr-8.png)
 
 横坐标对应图片的高度，纵坐标对应每行像素点的个数，我们可以很直观知道纵坐标为 0 的部分都是图片的空白间距，有值的部分则是文字内容所在的行，行高则是所跨越的区间。
 
 ### 切割文字（切割列）
 通过上一步的扫描行我们已经可以切割出文字内容所占的行，下一步就是从左到右扫描文字行每列的像素值，同样是黑色记 0 白色记 1 ，统计 1 的个数，以第一行文字为例，其扫描的出来折线图如下：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-9.png)
+![](./ocr/ocr-9.png)
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-10.png)
+![](./ocr/ocr-10.png)
 
 嗯，这个我知道，和切割行一样，只要将纵坐标有值得部分切出来就好！
 
 但这里会有问题，如果简单的按纵坐标有值的区间去拆分文字，最后一个文字就会被拆分左右两部部分：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-13.jpeg)
+![](./ocr/ocr-13.jpeg)
 
 原因也很好理解，最后一个文字是左右结构的，中间有空隙隔开，所以文字被拆开了。
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-14.jpeg)
+![](./ocr/ocr-14.jpeg)
 
 可以看看下面的几个特殊的字符，一般拆分文字时我们需要考虑左右或者上下结构的文字。
 
 **上下结构的文字：**
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-15.jpeg)
+![](./ocr/ocr-15.jpeg)
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-17.png)
+![](./ocr/ocr-17.png)
 
 **左右结构的文字：**
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-16.jpeg)
+![](./ocr/ocr-16.jpeg)
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-18.png)
+![](./ocr/ocr-18.png)
 
 
-针对这些文字我们应该如何处理呢？我们可以很容易观察出希卡文字都是正方形的，那么每个自己宽高比例应该 1 : 1，如果我们能知道文字的宽度或者高度，那我们就是如何拼接文字区域了。如何计算文字的宽度或高度呢？
+针对这些文字我们应该如何处理呢？我们可以很容易观察出希卡文字都是正方形的，那么每个文字宽高比例应该 1 : 1，如果我们能知道文字的宽度或者高度，那我们就是如何拼接文字区域了。如何计算文字的宽度或高度呢？
 
 处理其实很简单，针对整张图片，**横向扫描一次，纵向扫描一次**，可以得到文字内容在横纵方向上的投影大小，我们取横纵投影中**最大的区间**就是标准文字的大小，拆分时文字块不足标准大小则继续与下个投影区间的文字块合并，直到达到文字的标准大小。
 
@@ -414,12 +416,12 @@ function mergeRanges(data, size) {
 
 剩下的就是算各种偏移值然后从 cnavas 中切割出单个的文字块并记录下位置信息，[具体的实现可以戳这里](https://github.com/kinglisky/zelda-words/blob/master/src/utils/image-ocr.ts#L221)，就不细讲了，切割出来文字内容如下：
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-19.png)
+![](./ocr/ocr-19.png)
 ## 相似图片检测
 
 切割出文字后，剩下的就是文字的翻译了。对于希卡文我们知道它与英文的映射规则，每个希卡符号背后对都对应一个英文符号，我们可以生成 40 个英文字符对应的希卡符号图片作为标准字符图片，那么希卡图片翻译就可以简单理解为：将切割的图片与已知的 40 标准字符图片逐个进行**相似性比较**，找出相似度最高的图片就是目标字符。
 
-![abcdefghijklmnopqrstuvwxyz0123456789.-!? 对应的希卡符号](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-7.jpeg)
+![abcdefghijklmnopqrstuvwxyz0123456789.-!? 对应的希卡符号](./ocr/ocr-7.jpeg)
 
 上面为 `abcdefghijklmnopqrstuvwxyz0123456789.-!?` 对应的希卡符号。
 
@@ -563,4 +565,4 @@ export async function readMetaInfo(imageUrl, mapUrl) {
 
 摸鱼做的一个小东西，粗略的了解了下 OCR 的实现还是很开心的。最后这张图片给特别的你，耶~
 
-![](https://markdown-write.oss-cn-hangzhou.aliyuncs.com/ocr-2.jpeg)
+![](./ocr/ocr-2.jpeg)
