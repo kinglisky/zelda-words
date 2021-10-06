@@ -27,7 +27,7 @@ console.log({
 });
 
 function randomValue(value, base = 0) {
-    return Math.round(Math.random() * value + base);
+    return Math.floor(Math.random() * value + base);
 }
 
 function fillSvg(svg, color) {
@@ -50,24 +50,17 @@ async function loadSvg(word) {
 
 async function createWordImage(word) {
     const size = randomValue(200, 24);
-    // const rotate = randomValue(360);
     const svg = await loadSvg(word);
-    const rotateImageBuffer = await sharp(svg)
+    // 生成大小不同的图片
+    const resizeImageBuffer = await sharp(svg)
         .resize(size, size)
-        // .rotate(rotate, {
-        //     background: {
-        //         r: 0,
-        //         g: 0,
-        //         b: 0,
-        //         alpha: 0,
-        //     },
-        // })
         .trim()
         .png().toBuffer();
-    const wordImageBuffer = await sharp(rotateImageBuffer)
+    // 统一缩放成 28 x 28
+    const wordImageBuffer = await sharp(resizeImageBuffer)
         .resize(IMAGE_WIDTH, IMAGE_HEIGHT)
         .png().toBuffer();
-    // 每个字符的底色
+    // 字符背景色
     const baseImageBuffer = await sharp({
         create: {
             width: IMAGE_WIDTH,
@@ -81,6 +74,7 @@ async function createWordImage(word) {
             },
         }
     }).png().toBuffer();
+    // 将文字图片绘制到背景上
     const image = await sharp(baseImageBuffer).composite([{
         input: wordImageBuffer,
         top: 0,

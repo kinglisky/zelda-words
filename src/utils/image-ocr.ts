@@ -427,6 +427,7 @@ function convertToPredictData(images: Chunk[], imageSize: number) {
         const imageData = resizeCanvas(it.canvas, imageSize);
         const pixs = new Float32Array(imageData.data.length / 4);
         let index = 0;
+        // rgb 转灰度
         for (let i = 0; i < imageData.data.length; i += 4) {
             const r = imageData.data[i];
             const g = imageData.data[i + 1];
@@ -449,12 +450,17 @@ export async function readMetaInfoByCnn(imageUrl: string) {
     const modelURL = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/model.json';
     const imageSize = 28;
     const readImage = await loadImage(imageUrl);
+    // 将希卡文的图片拆分出来
     const images = splitImage(readImage, false);
+    // 转换成模型需要的张量格式
     const predictData = convertToPredictData(images, imageSize);
+    // 加载训练号的模型
     const model = await tf.loadLayersModel(modelURL);
     const output = model.predict(predictData) as tf.Tensor;
     const axis = 1;
+    // 获取预测结果的索引
     const predictIndexs = Array.from(output.argMax(axis).dataSync());
+    // 通过索引找到目标字符
     const results = predictIndexs.map((predictIndex, index) => {
         const target = words[predictIndex];
         return {

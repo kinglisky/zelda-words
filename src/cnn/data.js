@@ -4,8 +4,8 @@ import TEST from '../data/test.json';
 import trainBufferURL from '../data/train.buffer?url';
 import testBufferURL from '../data/test.buffer?url';
 
-TRAIN.data = trainBufferURL;
-TEST.data = testBufferURL;
+TRAIN.url = trainBufferURL;
+TEST.url = testBufferURL;
 
 export const WORDS_COUNT = 40;
 export const IMAGE_H = 28;
@@ -15,10 +15,10 @@ const loadBuffer = async (data) => {
         count,
         width,
         height,
-        data: path,
+        url,
         indexs,
     } = data;
-    const buffers = await fetch(path).then(res => res.arrayBuffer());
+    const buffers = await fetch(url).then(res => res.arrayBuffer());
     const images = new Float32Array(new Uint8ClampedArray(buffers));
     for (let i = 0; i < images.length; i++) {
         images[i] = images[i] / 255;
