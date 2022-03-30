@@ -1,5 +1,9 @@
 # 希卡文生成翻译器器
 
+工具地址：https://kinglisky.github.io/zelda-words/index.html
+
+![demo](./demo.gif)
+
 开发：
 
 ```
