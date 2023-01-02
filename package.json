@@ -16,7 +16,7 @@
     "@types/dom-to-image": "^2.6.2",
     "@types/node": "^16.9.3",
     "@vitejs/plugin-vue": "^1.1.4",
-    "@vue/compiler-sfc": "^3.0.5",
+    "@vue/compiler-sfc": "^3.2.45",
     "@vuedx/typecheck": "^0.6.0",
     "@vuedx/typescript-plugin-vue": "^0.6.0",
     "dom-to-image": "^2.6.0",
