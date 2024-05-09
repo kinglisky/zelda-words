@@ -447,7 +447,7 @@ function convertToPredictData(images: Chunk[], imageSize: number) {
 }
 
 export async function readMetaInfoByCnn(imageUrl: string) {
-    const modelURL = 'https://markdown-write.oss-cn-hangzhou.aliyuncs.com/model.json';
+    const modelURL = import.meta.env.DEV ? 'model.json' : '/zelda-words/model.json';
     const imageSize = 28;
     const readImage = await loadImage(imageUrl);
     // 将希卡文的图片拆分出来
